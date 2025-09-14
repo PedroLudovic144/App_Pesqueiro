@@ -2,7 +2,6 @@ import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
-  SafeAreaView,
   View,
   Text,
   Image,
@@ -68,55 +67,56 @@ export default function RegisterPesqueiroScreen({
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#FFFFFF' },
   container: {
-    flex: 1,
     alignItems: 'center',
     paddingHorizontal: 24,
     justifyContent: 'center',
   },
   logo: {
-    width: Math.min(160, width * 0.45),
-    height: Math.min(160, width * 0.45),
-    marginBottom: 18,
+    width: Math.min(300, width * 0.55), 
+    height: Math.min(300, width * 0.55),
   },
   title: {
-    fontSize: 22,
+    fontSize: 33, 
     fontWeight: '700',
     color: '#0B0B0B',
-    marginBottom: 10,
+    marginBottom: 14,
     textAlign: 'center',
   },
   subtitleWrap: {
     alignItems: 'center',
-    marginBottom: 18,
+    marginBottom: 24,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 28, // maior
     color: '#8F8F8F',
     textAlign: 'center',
   },
   button: {
-    backgroundColor: '#2B8AF6', 
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 8,
-    minWidth: 180,
+    backgroundColor: '#2B8AF6',
+    paddingVertical: 16, // maior
+    paddingHorizontal: 40,
+    borderRadius: 10,
+    minWidth: 220, // mais largo
     alignItems: 'center',
-    marginVertical: 12,
-    elevation: 2,
+    marginVertical: 16,
+    elevation: 3,
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 18, // maior
     fontWeight: '600',
   },
   linkText: {
     color: '#222',
-    fontSize: 13,
-    marginTop: 8,
+    fontSize: 15, // maior
+    marginTop: 10,
     textAlign: 'center',
   },
   linkBlue: {
     color: '#0B84E6',
     textDecorationLine: 'underline',
+    fontSize: 15, // maior também
+    fontWeight: '500',
   },
 });
+
