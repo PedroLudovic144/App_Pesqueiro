@@ -1,6 +1,5 @@
 import React from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
 import {
   View,
   Text,
@@ -9,54 +8,46 @@ import {
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../App';
 
 const { width } = Dimensions.get('window');
 
-type Props = {
-  onCadastrar?: () => void;
-  onEntrarComoCliente?: () => void;
-  logoSource?: any;
-};
+type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
 
-export default function RegisterPesqueiroScreen({
-  onCadastrar,
-  onEntrarComoCliente,
-  logoSource,
-}: Props) {
+export default function RegisterPesqueiroScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <Image
-          source={
-            logoSource || require('../assets/images/logo.png')
-          }
+          source={require('../assets/images/logo.png')}
           style={styles.logo}
           resizeMode="contain"
-          accessibilityLabel="Logo do pesqueiro"
         />
 
         <Text style={styles.title}>Registre seu pesqueiro</Text>
 
         <View style={styles.subtitleWrap}>
-          <Text style={styles.subtitle}>Gerencie seu negocio</Text>
+          <Text style={styles.subtitle}>Gerencie seu negócio</Text>
           <Text style={styles.subtitle}>Apenas por 29,99</Text>
         </View>
 
         <TouchableOpacity
           style={styles.button}
           activeOpacity={0.8}
-          onPress={() => onCadastrar && onCadastrar()}
-          accessibilityRole="button"
-          accessibilityLabel="Cadastrar">
+          onPress={() => navigation.navigate('Editar')}
+        >
           <Text style={styles.buttonText}>Cadastrar</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => onEntrarComoCliente && onEntrarComoCliente()}
-          accessibilityRole="link">
+          onPress={() => console.log('Entrar como cliente')}
+        >
           <Text style={styles.linkText}>
-            É cliente? <Text style={styles.linkBlue}>Entre agora para ver os
-            pesqueiros próximos a você</Text>
+            É cliente?{' '}
+            <Text style={styles.linkBlue}>
+              Entre agora para ver os pesqueiros próximos a você
+            </Text>
           </Text>
         </TouchableOpacity>
       </View>
