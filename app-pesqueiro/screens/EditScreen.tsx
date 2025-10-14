@@ -13,8 +13,8 @@ import * as ImagePicker from 'expo-image-picker';
 
 export default function EditScreen() {
   const [nome, setNome] = useState<string>("Pesqueiro Cantareira");
-  const [endereco, setEndereco] = useState<string>("Av. Luís Carlos Gentile de Laet...");
-  const [descricao, setDescricao] = useState<string>("Pesqueiro da zona norte de SP...");
+  const [endereco, setEndereco] = useState<string>("Av. Luís Carlos Gentile de Laet, 2500 - Tremembé, São Paulo - SP, 02378-000");
+  const [descricao, setDescricao] = useState<string>("Venha desfrutar de um dia de lazer e aventura em nosso pesqueiro, temos 3 tanques para pesca com variedade de peixes, Tambas, Dourado, Carpas, Pirarara e como nosso carro chefe as Bocudas, belas tilapias que nos deu a fama: PARAISO DAS BOCUDAS. Nosso restaurante irá tornar sua estada ainda mais saborosa, com uma  deliciosa comida caseira e porções preparadas na hora. Saia da rotina e venha desfrutar da natureza com amigos e familiares.");
   const [imagem, setImagem] = useState<string>('https://picsum.photos/400/200');
 
   // 📂 Escolher imagem da galeria

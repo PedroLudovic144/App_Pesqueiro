@@ -29,7 +29,7 @@ export default function RegisterPesqueiroScreen({ navigation }: Props) {
 
         <View style={styles.subtitleWrap}>
           <Text style={styles.subtitle}>Gerencie seu negócio</Text>
-          <Text style={styles.subtitle}>Apenas por 29,99</Text>
+          <Text style={styles.subtitle}>Apenas por 34,99</Text>
         </View>
 
         <TouchableOpacity
