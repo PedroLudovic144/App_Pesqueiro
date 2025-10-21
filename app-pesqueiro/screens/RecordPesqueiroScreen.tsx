@@ -26,7 +26,7 @@ const RegisterPesqueiroScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header */}
+       
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Image
@@ -37,9 +37,9 @@ const RegisterPesqueiroScreen: React.FC<Props> = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Formulário */}
+      
       <View style={styles.form}>
-        {/* CPF / Estado */}
+        
         <View style={styles.row}>
           <TextInput
             style={[styles.input, { flex: 1, marginRight: 8 }]}
@@ -55,7 +55,7 @@ const RegisterPesqueiroScreen: React.FC<Props> = ({ navigation }) => {
           />
         </View>
 
-        {/* Cidade / Bairro */}
+        
         <View style={styles.row}>
           <View style={[styles.pickerContainer, { flex: 1, marginRight: 8 }]}>
             <Picker
@@ -76,7 +76,7 @@ const RegisterPesqueiroScreen: React.FC<Props> = ({ navigation }) => {
           />
         </View>
 
-        {/* Endereço / Número */}
+        
         <View style={styles.row}>
           <TextInput
             style={[styles.input, { flex: 1, marginRight: 8 }]}
@@ -93,7 +93,7 @@ const RegisterPesqueiroScreen: React.FC<Props> = ({ navigation }) => {
           />
         </View>
 
-        {/* Nome Fantasia / CEP */}
+        
         <View style={styles.row}>
           <TextInput
             style={[styles.input, { flex: 1, marginRight: 8 }]}
@@ -110,7 +110,7 @@ const RegisterPesqueiroScreen: React.FC<Props> = ({ navigation }) => {
           />
         </View>
 
-        {/* Botão */}
+        
         <TouchableOpacity
           style={styles.button}
           onPress={() => navigation.navigate("Editar")}

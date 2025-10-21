@@ -42,19 +42,19 @@ const MovimentacoesScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Título e menu */}
+      
       <View style={styles.titleContainer}>
         <Text style={styles.title}>Movimentações</Text>
       </View>
 
-      {/* Cabeçalho da tabela */}
+      
       <View style={[styles.row, styles.headerRow]}>
         <Text style={[styles.headerCell, { flex: 2 }]}>Data/Hora</Text>
         <Text style={[styles.headerCell, { flex: 1 }]}>Transação</Text>
         <Text style={[styles.headerCell, { flex: 1 }]}>Valor Total</Text>
       </View>
 
-      {/* Linhas */}
+      
       <FlatList
         data={dadosExemplo}
         renderItem={renderItem}
@@ -112,9 +112,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     borderWidth: 1,
     borderColor: "#000",
+    marginLeft: 20,
+    marginRight: 20,
   },
   headerRow: {
     backgroundColor: "#ddd",
+    marginLeft: 20,
+    marginRight: 20,
   },
   cell: {
     padding: 10,
@@ -128,8 +132,12 @@ const styles = StyleSheet.create({
   },
   rowEntrada: {
     backgroundColor: "#00ff0044",
+    marginLeft: 20,
+    marginRight: 20,
   },
   rowSaida: {
     backgroundColor: "#ff000044",
+    marginLeft: 20,
+    marginRight: 20,
   },
 });
