@@ -1,30 +1,37 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { DrawerContentComponentProps } from '@react-navigation/drawer';
 
 export default function SideMenu({ navigation }: DrawerContentComponentProps) {
   return (
     <View style={styles.container}>
-      
+      {/* Seção principal */}
       <View style={styles.navSection}>
         <Text style={styles.sectionTitle}>Movimentações</Text>
 
         <TouchableOpacity
           style={styles.navItem}
-          onPress={() => navigation.navigate('Registrar Movimentação')}
+          onPress={() => navigation.navigate('Movimentacoes')}
+        >
+          <Text style={styles.navText}>Ver Movimentações</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => navigation.navigate('Record')}
         >
           <Text style={styles.navText}>Registrar Movimentação</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.navItem}
-          onPress={() => navigation.navigate('Editar Pesqueiro')}
+          onPress={() => navigation.navigate('Editar')}
         >
           <Text style={styles.navText}>Editar Pesqueiro</Text>
         </TouchableOpacity>
       </View>
 
-      
+      {/* Seção do perfil */}
       <View style={styles.profileSection}>
         <Image
           source={{ uri: 'https://i.pravatar.cc/150' }}
@@ -34,7 +41,7 @@ export default function SideMenu({ navigation }: DrawerContentComponentProps) {
 
         <TouchableOpacity
           style={styles.botao}
-          onPress={() => navigation.navigate('Editar Informações')}
+          onPress={() => navigation.navigate('Editar')}
         >
           <Text style={styles.txtBotao}>Editar suas informações</Text>
         </TouchableOpacity>
@@ -43,7 +50,10 @@ export default function SideMenu({ navigation }: DrawerContentComponentProps) {
           <Text style={styles.txtBotao}>Mudar de conta</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.botao}>
+        <TouchableOpacity
+          style={[styles.botao, { backgroundColor: '#e74c3c' }]}
+          onPress={() => navigation.navigate('Login')}
+        >
           <Text style={styles.txtBotao}>Sair</Text>
         </TouchableOpacity>
       </View>
@@ -55,7 +65,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#3498db',
-    justifyContent: 'space-between', 
+    justifyContent: 'space-between',
     paddingVertical: 40,
     paddingHorizontal: 20,
   },
