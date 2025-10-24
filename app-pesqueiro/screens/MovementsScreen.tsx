@@ -38,7 +38,7 @@ const MovimentacoesScreen: React.FC = () => {
             source={{ uri: "https://i.pravatar.cc/100" }}
             style={styles.avatar}
           />
-          <Text style={styles.headerText}>Rafiq Aboarrage ▼</Text>
+          <Text style={styles.headerText}>Rafiq Aboarrage </Text>
         </View>
       </View>
 

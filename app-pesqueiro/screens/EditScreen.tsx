@@ -92,21 +92,21 @@ export default function EditScreen() {
       <Image source={{ uri: imagem }} style={styles.imagem} />
 
       <TouchableOpacity style={styles.botao} onPress={escolherImagem}>
-        <Text style={styles.txtBotao}>📂 Escolher imagem da Galeria</Text>
+        <Text style={styles.txtBotao}> Escolher imagem da Galeria</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={[styles.botao, { backgroundColor: '#2ecc71', marginTop: 10 }]}
         onPress={tirarFoto}
       >
-        <Text style={styles.txtBotao}>📸 Tirar Foto</Text>
+        <Text style={styles.txtBotao}> Tirar Foto</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={[styles.botao, { backgroundColor: '#27ae60', marginTop: 25 }]}
         onPress={salvarAlteracoes}
       >
-        <Text style={styles.txtBotao}>💾 Salvar Alterações</Text>
+        <Text style={styles.txtBotao}> Salvar Alterações</Text>
       </TouchableOpacity>
     </ScrollView>
   );

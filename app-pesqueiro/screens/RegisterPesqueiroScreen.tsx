@@ -35,7 +35,7 @@ export default function RegisterPesqueiroScreen({ navigation }: Props) {
         <TouchableOpacity
           style={styles.button}
           activeOpacity={0.8}
-          onPress={() => navigation.navigate('DrawerApp')}
+          onPress={() => navigation.navigate('RecordCliente')}
         >
           <Text style={styles.buttonText}>Cadastrar</Text>
         </TouchableOpacity>

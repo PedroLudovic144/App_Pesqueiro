@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,12 +10,15 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
+import { MaskedTextInput } from 'react-native-mask-text';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
+type Props = NativeStackScreenProps<RootStackParamList, 'RecordCliente'>;
 
-export default function LoginScreen({ navigation }: Props) {
+export default function RecordClienteScreen({ navigation }: Props) {
+  const [cpf, setCpf] = useState('');
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -24,22 +27,18 @@ export default function LoginScreen({ navigation }: Props) {
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <View style={styles.container}>
           <Image source={require('../assets/images/logo.png')} style={styles.logo} />
-          <Text style={styles.title}>Login</Text>
+
+          <Text style={styles.title}>Cadastro</Text>
 
           <TextInput placeholder="Email" style={styles.input} keyboardType="email-address" />
+          <TextInput placeholder="Nome" style={styles.input} />
           <TextInput placeholder="Senha" secureTextEntry style={styles.input} />
 
           <TouchableOpacity
             style={styles.button}
-            onPress={() => navigation.navigate('DrawerApp')}
+            onPress={() => navigation.navigate('Login')}
           >
-            <Text style={styles.buttonText}>Entrar</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.registerText}>
-              Não tem conta? <Text style={styles.registerLink}>Cadastre-se</Text>
-            </Text>
+            <Text style={styles.buttonText}>Cadastrar</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -86,14 +85,5 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontWeight: 'bold',
-  },
-  registerText: {
-    marginTop: 15,
-    color: '#333',
-  },
-  registerLink: {
-    color: '#2B8AF6',
-    fontWeight: '600',
-    textDecorationLine: 'underline',
   },
 });

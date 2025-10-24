@@ -7,8 +7,11 @@ import {
   StyleSheet,
   Image,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
+import { TextInputMask } from "react-native-masked-text";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../App";
 
@@ -25,100 +28,105 @@ const RegisterPesqueiroScreen: React.FC<Props> = ({ navigation }) => {
   const [cep, setCep] = useState<string>("");
 
   return (
-    <ScrollView style={styles.container}>
-       
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Image
-            source={{ uri: "https://i.pravatar.cc/100" }}
-            style={styles.avatar}
-          />
-          <Text style={styles.headerText}>Rafiq Aboarrage ▼</Text>
-        </View>
-      </View>
-
-      
-      <View style={styles.form}>
-        
-        <View style={styles.row}>
-          <TextInput
-            style={[styles.input, { flex: 1, marginRight: 8 }]}
-            placeholder="CPF"
-            value={cpf}
-            onChangeText={setCpf}
-          />
-          <TextInput
-            style={[styles.input, { flex: 1 }]}
-            placeholder="Estado"
-            value={estado}
-            onChangeText={setEstado}
-          />
-        </View>
-
-        
-        <View style={styles.row}>
-          <View style={[styles.pickerContainer, { flex: 1, marginRight: 8 }]}>
-            <Picker
-              selectedValue={cidade}
-              onValueChange={(itemValue) => setCidade(itemValue)}
-              style={styles.picker}
-            >
-              <Picker.Item label="Cidade" value="" />
-              <Picker.Item label="São Paulo" value="sp" />
-              <Picker.Item label="Rio de Janeiro" value="rj" />
-            </Picker>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <Image
+              source={{ uri: "https://i.pravatar.cc/100" }}
+              style={styles.avatar}
+            />
+            <Text style={styles.headerText}>Rafiq Aboarrage </Text>
           </View>
-          <TextInput
-            style={[styles.input, { flex: 1 }]}
-            placeholder="Bairro"
-            value={bairro}
-            onChangeText={setBairro}
-          />
         </View>
 
-        
-        <View style={styles.row}>
-          <TextInput
-            style={[styles.input, { flex: 1, marginRight: 8 }]}
-            placeholder="Endereço"
-            value={endereco}
-            onChangeText={setEndereco}
-          />
-          <TextInput
-            style={[styles.input, { flex: 1 }]}
-            placeholder="Número"
-            keyboardType="numeric"
-            value={numero}
-            onChangeText={setNumero}
-          />
-        </View>
+        <View style={styles.form}>
+          {/* CPF + Estado */}
+          <View style={styles.row}>
+            <TextInputMask
+              type={"cpf"}
+              value={cpf}
+              onChangeText={setCpf}
+              style={[styles.input, { flex: 1, marginRight: 8 }]}
+              placeholder="CPF"
+              keyboardType="numeric"
+            />
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              placeholder="Estado"
+              value={estado}
+              onChangeText={setEstado}
+            />
+          </View>
 
-        
-        <View style={styles.row}>
-          <TextInput
-            style={[styles.input, { flex: 1, marginRight: 8 }]}
-            placeholder="Nome Fantasia"
-            value={nomeFantasia}
-            onChangeText={setNomeFantasia}
-          />
-          <TextInput
-            style={[styles.input, { flex: 1 }]}
-            placeholder="CEP"
-            keyboardType="numeric"
-            value={cep}
-            onChangeText={setCep}
-          />
-        </View>
+          {/* Cidade + Bairro */}
+          <View style={styles.row}>
+            <View style={[styles.pickerContainer, { flex: 1, marginRight: 8 }]}>
+              <Picker
+                selectedValue={cidade}
+                onValueChange={(itemValue) => setCidade(itemValue)}
+                style={styles.picker}
+              >
+                <Picker.Item label="Cidade" value="" />
+                <Picker.Item label="São Paulo" value="sp" />
+                <Picker.Item label="Rio de Janeiro" value="rj" />
+              </Picker>
+            </View>
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              placeholder="Bairro"
+              value={bairro}
+              onChangeText={setBairro}
+            />
+          </View>
 
-        
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.navigate("Editar")}
-        >
-          <Text style={styles.buttonText}>Cadastre</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          {/* Endereço + Número */}
+          <View style={styles.row}>
+            <TextInput
+              style={[styles.input, { flex: 1, marginRight: 8 }]}
+              placeholder="Endereço"
+              value={endereco}
+              onChangeText={setEndereco}
+            />
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              placeholder="Número"
+              keyboardType="numeric"
+              value={numero}
+              onChangeText={setNumero}
+            />
+          </View>
+
+          {/* Nome Fantasia + CEP */}
+          <View style={styles.row}>
+            <TextInput
+              style={[styles.input, { flex: 1, marginRight: 8 }]}
+              placeholder="Nome Fantasia"
+              value={nomeFantasia}
+              onChangeText={setNomeFantasia}
+            />
+            <TextInput
+              style={[styles.input, { flex: 1 }]}
+              placeholder="CEP"
+              keyboardType="numeric"
+              value={cep}
+              onChangeText={setCep}
+            />
+          </View>
+
+          {/* Botão */}
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate("Editar")}
+          >
+            <Text style={styles.buttonText}>Cadastre</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
