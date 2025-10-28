@@ -7,7 +7,14 @@ export default function SideMenu({ navigation }: DrawerContentComponentProps) {
     <View style={styles.container}>
       {/* Seção principal */}
       <View style={styles.navSection}>
-        <Text style={styles.sectionTitle}>Movimentações</Text>
+        <Text style={styles.sectionTitle}>Ações</Text>
+
+        <TouchableOpacity 
+          style={styles.navItem}
+          onPress={() => navigation.navigate('PesqueirosProximos')}
+        >
+          <Text style={styles.navText}>Ver Pesqueiros Próximos</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.navItem}
@@ -20,15 +27,24 @@ export default function SideMenu({ navigation }: DrawerContentComponentProps) {
           style={styles.navItem}
           onPress={() => navigation.navigate('Record')}
         >
-          <Text style={styles.navText}>Registrar Movimentação</Text>
+          <Text style={styles.navText}>Registrar Pesqueiro</Text>
         </TouchableOpacity>
 
+        
+
         <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate('Editar')}
-        >
-          <Text style={styles.navText}>Editar Pesqueiro</Text>
-        </TouchableOpacity>
+  style={styles.navItem}
+  onPress={() => navigation.navigate("ListaPeixes")}
+>
+  <Text style={styles.navText}>Lista de Peixes</Text>
+</TouchableOpacity>
+
+<TouchableOpacity
+  style={styles.navItem}
+  onPress={() => navigation.navigate("ListaEquipamentos")}
+>
+  <Text style={styles.navText}>Lista de Equipamentos</Text>
+</TouchableOpacity>
       </View>
 
       {/* Seção do perfil */}
@@ -46,8 +62,13 @@ export default function SideMenu({ navigation }: DrawerContentComponentProps) {
           <Text style={styles.txtBotao}>Editar suas informações</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.botao}>
-          <Text style={styles.txtBotao}>Mudar de conta</Text>
+        
+
+        <TouchableOpacity 
+        style={styles.botao}
+        onPress={() => navigation.navigate('Favorites')}
+        >
+          <Text style={styles.txtBotao}>Meus Favoritos</Text>
         </TouchableOpacity>
 
         <TouchableOpacity

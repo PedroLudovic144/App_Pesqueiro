@@ -25,7 +25,10 @@ const MovimentacoesScreen: React.FC = () => {
     >
       <Text style={[styles.cell, { flex: 2 }]}>{item.dataHora}</Text>
       <Text style={[styles.cell, { flex: 1 }]}>{item.tipo}</Text>
-      <Text style={[styles.cell, { flex: 1 }]}>{item.valor.toFixed(2)},00</Text>
+      <Text style={[styles.cell, { flex: 1 }]}>
+          {item.valor.toFixed(2) + ',00'}
+      </Text>
+
     </View>
   );
 
