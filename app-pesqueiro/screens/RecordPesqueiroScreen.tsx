@@ -10,7 +10,6 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import { TextInputMask } from "react-native-masked-text";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../App";
@@ -33,16 +32,18 @@ const RegisterPesqueiroScreen: React.FC<Props> = ({ navigation }) => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }}>
+        {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <Image
-              source={{ uri: "https://i.pravatar.cc/100" }}
+              source={require("../assets/images/cararafiq.png")}
               style={styles.avatar}
             />
-            <Text style={styles.headerText}>Rafiq Aboarrage </Text>
+            <Text style={styles.headerText}>Registrar Pesqueiro</Text>
           </View>
         </View>
 
+        {/* FORM */}
         <View style={styles.form}>
           {/* CPF + Estado */}
           <View style={styles.row}>
@@ -64,17 +65,12 @@ const RegisterPesqueiroScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Cidade + Bairro */}
           <View style={styles.row}>
-            <View style={[styles.pickerContainer, { flex: 1, marginRight: 8 }]}>
-              <Picker
-                selectedValue={cidade}
-                onValueChange={(itemValue) => setCidade(itemValue)}
-                style={styles.picker}
-              >
-                <Picker.Item label="Cidade" value="" />
-                <Picker.Item label="São Paulo" value="sp" />
-                <Picker.Item label="Rio de Janeiro" value="rj" />
-              </Picker>
-            </View>
+            <TextInput
+              style={[styles.input, { flex: 1, marginRight: 8 }]}
+              placeholder="Cidade"
+              value={cidade}
+              onChangeText={setCidade}
+            />
             <TextInput
               style={[styles.input, { flex: 1 }]}
               placeholder="Bairro"
@@ -122,7 +118,7 @@ const RegisterPesqueiroScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.button}
             onPress={() => navigation.navigate("Editar")}
           >
-            <Text style={styles.buttonText}>Cadastre</Text>
+            <Text style={styles.buttonText}>Cadastrar</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -170,15 +166,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     backgroundColor: "#fff",
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    backgroundColor: "#fff",
-  },
-  picker: {
-    height: 44,
   },
   button: {
     backgroundColor: "#2B8AF6",

@@ -50,7 +50,7 @@ export default function SideMenu({ navigation }: DrawerContentComponentProps) {
       {/* Seção do perfil */}
       <View style={styles.profileSection}>
         <Image
-          source={{ uri: 'https://i.pravatar.cc/150' }}
+          source={require('../assets/images/cararafiq.png')}
           style={styles.avatar}
         />
         <Text style={styles.nome}>Rafiq Aboarrage</Text>

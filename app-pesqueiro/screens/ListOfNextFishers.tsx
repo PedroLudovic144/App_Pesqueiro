@@ -7,7 +7,7 @@ interface Pesqueiro {
   nome: string;
   avaliacao: number;
   totalAvaliacoes: number;
-  imagem: string;
+  imagem: any;
   endereco: string;
   descricao: string;
 }
@@ -17,13 +17,13 @@ export default function ListOfNextFishers() {
   const navigation = useNavigation<any>();
 
   useEffect(() => {
-    const dados = [
+    const dados: Pesqueiro[] = [
       {
         id: "1",
         nome: "Pesqueiro Cantareira",
         avaliacao: 4.3,
         totalAvaliacoes: 667,
-        imagem: "https://picsum.photos/400/250?random=1",
+        imagem: require("../assets/images/pesqueirocantareira.png"),
         endereco: "Av. Luís Carlos Gentile de Laet, 2500 - Tremembé, São Paulo",
         descricao:
           "Pesqueiro da zona norte de São Paulo. Av. Luís Carlos Gentile de Laet, 2500. Contato: 2204-7754",
@@ -33,7 +33,7 @@ export default function ListOfNextFishers() {
         nome: "Pesqueiro do Arnaldo",
         avaliacao: 4.8,
         totalAvaliacoes: 988,
-        imagem: "https://picsum.photos/400/250?random=2",
+        imagem: require("../assets/images/pesqueiroarnaldao.png"),
         endereco: "Rua do Lago Azul, 45 - Mairiporã, São Paulo",
         descricao:
           "Ambiente familiar com restaurante e lagoas bem cuidadas. Ideal para finais de semana.",
@@ -43,7 +43,7 @@ export default function ListOfNextFishers() {
         nome: "Pesqueiro Paraíso",
         avaliacao: 4.5,
         totalAvaliacoes: 542,
-        imagem: "https://picsum.photos/400/250?random=3",
+        imagem: require("../assets/images/pesqueiroparaiso.jpg"),
         endereco: "Estrada dos Pinheiros, 900 - Atibaia, São Paulo",
         descricao:
           "Pesqueiro tranquilo com excelente estrutura e boa variedade de peixes.",
@@ -70,7 +70,8 @@ export default function ListOfNextFishers() {
                 {item.avaliacao} ★ ({item.totalAvaliacoes})
               </Text>
             </View>
-            <Image source={{ uri: item.imagem }} style={styles.imagem} />
+
+            <Image source={item.imagem} style={styles.imagem} />
           </TouchableOpacity>
         )}
         showsVerticalScrollIndicator={false}

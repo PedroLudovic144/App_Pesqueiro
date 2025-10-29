@@ -97,7 +97,7 @@ function DrawerNavigator() {
       <Drawer.Screen
         name="Record"
         component={RecordPesqueiroScreen}
-        options={{ title: "Registrar Movimentação", drawerLabel: "Registrar Movimentação" }}
+        options={{ title: "Registrar Pesqueiro", drawerLabel: "Registrar Pesqueiro" }}
       />
       <Drawer.Screen
         name="Editar"

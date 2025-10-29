@@ -14,23 +14,33 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function DetailsFisherScreen() {
   const navigation = useNavigation();
-  const route = useRoute();
-  const { pesqueiro } = route.params as any;
+  const route = useRoute<any>();
+  const pesqueiro = route.params?.pesqueiro;
 
   const [favorito, setFavorito] = useState(false);
 
-  // Verifica se já está favoritado
+  if (!pesqueiro) {
+    return (
+      <View style={styles.container}>
+        <Text>Erro: pesqueiro não encontrado</Text>
+      </View>
+    );
+  }
+
   useEffect(() => {
     const checkFavorito = async () => {
-      const dados = await AsyncStorage.getItem("favoritos");
-      const favoritos = dados ? JSON.parse(dados) : [];
-      const isFavorito = favoritos.some((f: any) => f.id === pesqueiro.id);
-      setFavorito(isFavorito);
+      try {
+        const dados = await AsyncStorage.getItem("favoritos");
+        const favoritos = dados ? JSON.parse(dados) : [];
+        const isFavorito = favoritos.some((f: any) => f.id === pesqueiro.id);
+        setFavorito(isFavorito);
+      } catch (e) {
+        console.error(e);
+      }
     };
     checkFavorito();
   }, [pesqueiro]);
 
-  // Alterna favorito e vibra ao favoritar
   const toggleFavorito = async () => {
     try {
       const dados = await AsyncStorage.getItem("favoritos");
@@ -40,7 +50,7 @@ export default function DetailsFisherScreen() {
         favoritos = favoritos.filter((f: any) => f.id !== pesqueiro.id);
       } else {
         favoritos.push(pesqueiro);
-        Vibration.vibrate(50); // vibração de 50ms
+        Vibration.vibrate(50);
       }
 
       await AsyncStorage.setItem("favoritos", JSON.stringify(favoritos));
@@ -52,7 +62,6 @@ export default function DetailsFisherScreen() {
 
   return (
     <View style={styles.container}>
-      {/* NAVBAR */}
       <View style={styles.navbar}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
@@ -67,27 +76,19 @@ export default function DetailsFisherScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* CONTEÚDO SCROLLÁVEL */}
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Image source={{ uri: pesqueiro.imagem }} style={styles.image} />
+        <Image source={pesqueiro.imagem} style={styles.image} />
         <Text style={styles.title}>{pesqueiro.nome}</Text>
-
-        {/* Avaliação */}
         <Text style={styles.rating}>
           {`⭐ ${pesqueiro.avaliacao} (${pesqueiro.totalAvaliacoes} avaliações)`}
         </Text>
-
-        {/* Endereço */}
         <Text style={styles.address}>{pesqueiro.endereco}</Text>
-
-        {/* Descrição */}
         <Text style={styles.description}>{pesqueiro.descricao}</Text>
       </ScrollView>
     </View>
   );
 }
 
-// ESTILOS
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
   navbar: {
@@ -98,8 +99,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingTop: 45,
     paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
   },
   navTitle: {
     color: "#fff",

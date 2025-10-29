@@ -37,11 +37,11 @@ const MovimentacoesScreen: React.FC = () => {
       {/* Header azul */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Image
-            source={{ uri: "https://i.pravatar.cc/100" }}
-            style={styles.avatar}
-          />
-          <Text style={styles.headerText}>Rafiq Aboarrage </Text>
+                <Image
+                  source={require('../assets/images/cararafiq.png')}
+                  style={styles.avatar}
+                />
+                <Text style={styles.headerText}>Rafiq Aboarrage</Text>
         </View>
       </View>
 
