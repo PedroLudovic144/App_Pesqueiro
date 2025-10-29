@@ -20,24 +20,25 @@ export default function AdicionarEquipamentoScreen() {
   }, [route.params]);
 
   const salvarEquipamento = async () => {
-    if (!nome || !quantidade || !tipo) {
-      Alert.alert("Erro", "Preencha todos os campos!");
-      return;
-    }
+  if (!nome || !quantidade || !tipo) {
+    Alert.alert("Erro", "Preencha todos os campos!");
+    return;
+  }
 
-    const novoEquipamento = { nome, quantidade, tipo };
-    const equipamentosSalvos = JSON.parse(await AsyncStorage.getItem("equipamentos") || "[]");
+  const novoEquipamento = { nome, quantidade, tipo };
+  const equipamentosSalvos = JSON.parse(await AsyncStorage.getItem("equipamentos") || "[]");
 
-    if ((route.params as any)?.index !== undefined) {
-      equipamentosSalvos[(route.params as any).index] = novoEquipamento;
-    } else {
-      equipamentosSalvos.push(novoEquipamento);
-    }
+  if ((route.params as any)?.index !== undefined) {
+    equipamentosSalvos[(route.params as any).index] = novoEquipamento;
+  } else {
+    equipamentosSalvos.push(novoEquipamento);
+  }
 
-    await AsyncStorage.setItem("equipamentos", JSON.stringify(equipamentosSalvos));
-    Alert.alert("Sucesso", "Equipamento salvo!");
-    navigation.goBack();
-  };
+  await AsyncStorage.setItem("equipamentos", JSON.stringify(equipamentosSalvos));
+  Alert.alert("Sucesso", "Equipamento salvo!");
+  navigation.navigate("ListaEquipamentos"); // 👈 volta direto para a lista
+};
+
 
   return (
     <SafeAreaView style={styles.container}>
