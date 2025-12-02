@@ -113,7 +113,7 @@ export default function EditScreen() {
           </TouchableOpacity>
 
           <View style={{ height: 40 }} /> {/* 👈 espaço extra antes do botão final */}
-
+          <Text style= {{textAlign: 'center', fontSize: 16, fontWeight: '800'}}>Ao compartilhar suas fotos, certifique-se de ter o direito de imagem de todas as pessoas na foto, se aplicável.</Text>
           <TouchableOpacity
             style={[
               styles.botao,

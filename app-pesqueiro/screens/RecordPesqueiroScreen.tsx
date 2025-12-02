@@ -52,7 +52,7 @@ const RegisterPesqueiroScreen: React.FC<Props> = ({ navigation }) => {
               value={cpf}
               onChangeText={setCpf}
               style={[styles.input, { flex: 1, marginRight: 8 }]}
-              placeholder="CPF"
+              placeholder="CPF ou CNPJ"
               keyboardType="numeric"
             />
             <TextInput

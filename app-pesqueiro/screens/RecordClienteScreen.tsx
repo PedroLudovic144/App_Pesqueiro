@@ -33,6 +33,14 @@ export default function RecordClienteScreen({ navigation }: Props) {
           <TextInput placeholder="Email" style={styles.input} keyboardType="email-address" />
           <TextInput placeholder="Nome" style={styles.input} />
           <TextInput placeholder="Senha" secureTextEntry style={styles.input} />
+          <TouchableOpacity onPress={() => navigation.navigate('TermsAndPolitics')}>
+                    <Text style={styles.linkText}>
+                      Ao cadastrar suas informações, você concorda com nossos{' '}
+                    <Text style={styles.linkBlue}>
+                      Termos de Uso e Política de Privacidade   
+                    </Text>
+                    </Text>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.button}
@@ -85,5 +93,17 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontWeight: 'bold',
+  },
+    linkText: {
+    color: '#222',
+    fontSize: 15,
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  linkBlue: {
+    color: '#0B84E6',
+    textDecorationLine: 'underline',
+    fontSize: 15,
+    fontWeight: '500',
   },
 });
