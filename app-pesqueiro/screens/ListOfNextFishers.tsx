@@ -62,7 +62,11 @@ export default function ListOfNextFishers() {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.card}
-            onPress={() => navigation.navigate("DetailsFisher", { pesqueiro: item })}
+            onPress={() => navigation.navigate("ClienteApp", {
+  screen: "DetailsFisher",
+  params: { pesqueiro: item }
+})}
+
           >
             <View style={styles.info}>
               <Text style={styles.nome}>{item.nome}</Text>

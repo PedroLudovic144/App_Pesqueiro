@@ -1,91 +1,111 @@
+// ListaEquipamentosScreen.tsx
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Alert } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation, useIsFocused } from "@react-navigation/native";
 
-export default function ListaEquipamentosScreen() {
-  const [equipamentos, setEquipamentos] = useState<any[]>([]);
-  const navigation = useNavigation();
-  const isFocused = useIsFocused();
+export default function ListaEquipamentosScreen({ navigation }: any) {
+  const [equipamentos, setEquipamentos] = useState([]);
 
   useEffect(() => {
-    const carregarEquipamentos = async () => {
-      const data = await AsyncStorage.getItem("equipamentos");
-      if (data) setEquipamentos(JSON.parse(data));
-    };
-    carregarEquipamentos();
-  }, [isFocused]);
+    carregar();
+    navigation.addListener("focus", carregar);
+  }, []);
 
-  const deletarEquipamento = async (index: number) => {
-    Alert.alert("Confirmar", "Deseja realmente deletar este equipamento?", [
-      { text: "Cancelar" },
-      {
-        text: "Deletar",
-        onPress: async () => {
-          const novaLista = [...equipamentos];
-          novaLista.splice(index, 1);
-          setEquipamentos(novaLista);
-          await AsyncStorage.setItem("equipamentos", JSON.stringify(novaLista));
-        },
-      },
-    ]);
-  };
+  async function carregar() {
+    const raw = await AsyncStorage.getItem("equipamentos");
+    setEquipamentos(raw ? JSON.parse(raw) : []);
+  }
 
-  const editarEquipamento = (index: number, item: any) => {
-    navigation.navigate("AdicionarEquipamento" as never, { index, item } as never);
-  };
+  async function excluir(id: string) {
+    const novo = equipamentos.filter((e: any) => e.id !== id);
+    await AsyncStorage.setItem("equipamentos", JSON.stringify(novo));
+    setEquipamentos(novo);
+  }
+
+  async function marcarAlugado(equip: any) {
+    const novo = equipamentos.map((e: any) =>
+      e.id === equip.id ? { ...e, alugado: !e.alugado } : e
+    );
+
+    await AsyncStorage.setItem("equipamentos", JSON.stringify(novo));
+    setEquipamentos(novo);
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Lista de Equipamentos</Text>
+    <View style={{ flex: 1, padding: 16 }}>
+      <TouchableOpacity
+        style={styles.addBtn}
+        onPress={() => navigation.navigate("AdicionarEquipamento")}
+      >
+        <Text style={styles.addTxt}>➕ Adicionar Equipamento</Text>
+      </TouchableOpacity>
 
       <FlatList
         data={equipamentos}
-        keyExtractor={(_, index) => index.toString()}
-        renderItem={({ item, index }) => (
+        keyExtractor={(i: any) => i.id}
+        renderItem={({ item }: any) => (
           <View style={styles.card}>
-            <Text style={styles.itemText}>🎣 {item.nome}</Text>
-            <Text>📦 Quantidade: {item.quantidade}</Text>
-            <Text>💰 Tipo: {item.tipo}</Text>
+            <Text style={styles.nome}>{item.nome}</Text>
+            <Text>Preço aluguel: R$ {item.valor}</Text>
+            <Text>Status: {item.alugado ? "🟥 Alugado" : "🟩 Disponível"}</Text>
 
-            <View style={{ flexDirection: "row", marginTop: 10 }}>
-              <TouchableOpacity style={styles.editButton} onPress={() => editarEquipamento(index, item)}>
-                <Text style={styles.buttonText}>Editar</Text>
-              </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.btn}
+              onPress={() => marcarAlugado(item)}
+            >
+              <Text style={styles.btnTxt}>
+                {item.alugado ? "Marcar como devolvido" : "Marcar como alugado"}
+              </Text>
+            </TouchableOpacity>
 
-              <TouchableOpacity style={styles.deleteButton} onPress={() => deletarEquipamento(index)}>
-                <Text style={styles.buttonText}>Deletar</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={styles.delBtn}
+              onPress={() =>
+                Alert.alert("Excluir", "Deseja excluir?", [
+                  { text: "Cancelar" },
+                  { text: "Excluir", onPress: () => excluir(item.id) },
+                ])
+              }
+            >
+              <Text style={styles.delTxt}>Excluir</Text>
+            </TouchableOpacity>
           </View>
         )}
       />
-
-      <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate("AdicionarEquipamento" as never)}>
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 20 },
-  title: { fontSize: 22, fontWeight: "bold", marginBottom: 20 },
-  card: { backgroundColor: "#f3f4f6", padding: 15, borderRadius: 10, marginBottom: 10 },
-  itemText: { fontWeight: "bold" },
-  fab: {
-    position: "absolute",
-    bottom: 20,
-    right: 20,
+  addBtn: {
     backgroundColor: "#2B8AF6",
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: "center",
-    justifyContent: "center",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 14,
   },
-  fabText: { color: "#fff", fontSize: 30 },
-  editButton: { backgroundColor: "#f59e0b", padding: 10, borderRadius: 8, marginRight: 10 },
-  deleteButton: { backgroundColor: "#ef4444", padding: 10, borderRadius: 8 },
-  buttonText: { color: "#fff", fontWeight: "bold" },
+  addTxt: { textAlign: "center", color: "#fff", fontWeight: "700" },
+
+  card: {
+    backgroundColor: "#f5f5f5",
+    padding: 14,
+    borderRadius: 10,
+    marginBottom: 12,
+  },
+  nome: { fontSize: 18, fontWeight: "700" },
+
+  btn: {
+    backgroundColor: "#28a745",
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  btnTxt: { color: "#fff", textAlign: "center", fontWeight: "700" },
+
+  delBtn: {
+    backgroundColor: "#c0392b",
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  delTxt: { color: "#fff", textAlign: "center", fontWeight: "700" },
 });

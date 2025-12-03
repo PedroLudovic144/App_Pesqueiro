@@ -1,4 +1,5 @@
-import React from 'react';
+// LoginScreen.tsx
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -9,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
@@ -16,6 +18,25 @@ import { RootStackParamList } from '../App';
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
 export default function LoginScreen({ navigation }: Props) {
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+
+  function fazerLogin() {
+    if (!email.trim() || !senha.trim()) {
+      Alert.alert("Erro", "Preencha todos os campos");
+      return;
+    }
+
+    // Simulação de usuário logado
+    const user = {
+      id: email.trim().toLowerCase(), // ID único baseado no email
+      email
+    };
+
+    // Envia o usuário para a tela de selecionar modo (Gerente/Cliente)
+    navigation.navigate("RoleSelection", { user });
+  }
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -26,12 +47,25 @@ export default function LoginScreen({ navigation }: Props) {
           <Image source={require('../assets/images/logo.png')} style={styles.logo} />
           <Text style={styles.title}>Login</Text>
 
-          <TextInput placeholder="Email" style={styles.input} keyboardType="email-address" />
-          <TextInput placeholder="Senha" secureTextEntry style={styles.input} />
+          <TextInput
+            placeholder="Email"
+            style={styles.input}
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
+
+          <TextInput
+            placeholder="Senha"
+            secureTextEntry
+            style={styles.input}
+            value={senha}
+            onChangeText={setSenha}
+          />
 
           <TouchableOpacity
             style={styles.button}
-            onPress={() => navigation.navigate('DrawerApp')}
+            onPress={fazerLogin}
           >
             <Text style={styles.buttonText}>Entrar</Text>
           </TouchableOpacity>
@@ -82,6 +116,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     alignItems: 'center',
+    marginTop: 5,
   },
   buttonText: {
     color: '#fff',

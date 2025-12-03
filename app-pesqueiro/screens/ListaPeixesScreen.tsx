@@ -1,91 +1,50 @@
+// ListaPeixesScreen.tsx
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Alert } from "react-native";
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation, useIsFocused } from "@react-navigation/native";
 
 export default function ListaPeixesScreen() {
-  const [peixes, setPeixes] = useState<any[]>([]);
-  const navigation = useNavigation();
-  const isFocused = useIsFocused();
+  const [lagos, setLagos] = useState<any[]>([]);
 
   useEffect(() => {
-    const carregarPeixes = async () => {
-      const data = await AsyncStorage.getItem("peixes");
-      if (data) setPeixes(JSON.parse(data));
-    };
-    carregarPeixes();
-  }, [isFocused]);
+    carregar();
+  }, []);
 
-  const deletarPeixe = async (index: number) => {
-    Alert.alert("Confirmar", "Deseja realmente deletar este peixe?", [
-      { text: "Cancelar" },
-      {
-        text: "Deletar",
-        onPress: async () => {
-          const novaLista = [...peixes];
-          novaLista.splice(index, 1);
-          setPeixes(novaLista);
-          await AsyncStorage.setItem("peixes", JSON.stringify(novaLista));
-        },
-      },
-    ]);
-  };
-
-  const editarPeixe = (index: number, item: any) => {
-    navigation.navigate("AdicionarPeixe" as never, { index, item } as never);
-  };
+  async function carregar() {
+    const raw = await AsyncStorage.getItem("lagos");
+    const arr = raw ? JSON.parse(raw) : [];
+    setLagos(arr);
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Lista de Peixes</Text>
+    <View style={{ flex: 1, padding: 12 }}>
+      <Text style={styles.title}>Peixes por Lago</Text>
 
       <FlatList
-        data={peixes}
-        keyExtractor={(_, index) => index.toString()}
-        renderItem={({ item, index }) => (
-          <View style={styles.card}>
-            <Text style={styles.itemText}>🐟 Espécie: {item.especie}</Text>
-            <Text>📦 Quantidade: {item.quantidade} kg</Text>
-            <Text>📅 Data: {item.data}</Text>
-
-            <View style={{ flexDirection: "row", marginTop: 10 }}>
-              <TouchableOpacity style={styles.editButton} onPress={() => editarPeixe(index, item)}>
-                <Text style={styles.buttonText}>Editar</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.deleteButton} onPress={() => deletarPeixe(index)}>
-                <Text style={styles.buttonText}>Deletar</Text>
-              </TouchableOpacity>
-            </View>
+        data={lagos}
+        keyExtractor={(i: any) => i.id}
+        renderItem={({ item }) => (
+          <View style={styles.lagoCard}>
+            <Text style={styles.lagoNome}>{item.nome}</Text>
+            {item.peixes.length === 0 ? (
+              <Text style={{ color: "#888" }}>Nenhum peixe neste lago.</Text>
+            ) : (
+              item.peixes.map((p: any) => (
+                <Text key={p.id} style={styles.peixeItem}>
+                  • {p.nome} — {p.quantidade} unidades — R$ {p.valor}
+                </Text>
+              ))
+            )}
           </View>
         )}
       />
-
-      <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate("AdicionarPeixe" as never)}>
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 20 },
-  title: { fontSize: 22, fontWeight: "bold", marginBottom: 20 },
-  card: { backgroundColor: "#f3f4f6", padding: 15, borderRadius: 10, marginBottom: 10 },
-  itemText: { fontWeight: "bold" },
-  fab: {
-    position: "absolute",
-    bottom: 20,
-    right: 20,
-    backgroundColor: "#3b82f6",
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  fabText: { color: "#fff", fontSize: 30 },
-  editButton: { backgroundColor: "#f59e0b", padding: 10, borderRadius: 8, marginRight: 10 },
-  deleteButton: { backgroundColor: "#ef4444", padding: 10, borderRadius: 8 },
-  buttonText: { color: "#fff", fontWeight: "bold" },
+  title: { fontSize: 22, fontWeight: "700", marginBottom: 12 },
+  lagoCard: { borderWidth: 1, padding: 12, borderRadius: 10, marginBottom: 12 },
+  lagoNome: { fontSize: 18, fontWeight: "700", marginBottom: 6 },
+  peixeItem: { paddingLeft: 8, marginTop: 4 },
 });

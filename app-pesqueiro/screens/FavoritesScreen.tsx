@@ -1,89 +1,40 @@
+// FavoritesScreen.tsx
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { View, FlatList, Text, TouchableOpacity, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
 
-export default function FavoritesScreen() {
-  const [favoritos, setFavoritos] = useState<any[]>([]);
-  const navigation = useNavigation();
+export default function FavoritesScreen({ navigation, route }: any) {
+  const user = route?.params?.user ?? { id: "guest" };
+  const [list, setList] = useState<any[]>([]);
 
-  useEffect(() => {
-    const carregar = async () => {
-      const dados = await AsyncStorage.getItem("favoritos");
-      setFavoritos(dados ? JSON.parse(dados) : []);
-    };
-    const unsubscribe = navigation.addListener("focus", carregar);
-    return unsubscribe;
-  }, [navigation]);
+  useEffect(()=>{ carregar(); const unsub = navigation.addListener('focus', carregar); return unsub; }, []);
 
-  const renderItem = ({ item }: any) => (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={() => navigation.navigate("DetailsFisher" as never, { pesqueiro: item } as never)}
-    >
-      <Image source={{ uri: item.imagem }} style={styles.image} />
-      <Text style={styles.nome}>{item.nome}</Text>
-    </TouchableOpacity>
-  );
+  async function carregar() {
+    const rawFav = await AsyncStorage.getItem(`favoritos_${user.id}`);
+    const favArr = rawFav ? JSON.parse(rawFav) : [];
+    const rawP = await AsyncStorage.getItem("pesqueiros");
+    const pesq = rawP ? JSON.parse(rawP) : [];
+    setList(pesq.filter((p:any)=> favArr.includes(p.id)));
+  }
 
   return (
-    <View style={styles.container}>
-      {/* NAVBAR */}
-      <View style={styles.navbar}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.navTitle}>Favoritos</Text>
-        <View style={{ width: 24 }} /> {/* espaço vazio para centralizar o título */}
+    <SafeAreaView style={{flex:1}}>
+      <View style={{padding:12}}>
+        <Text style={{fontSize:18,fontWeight:"700"}}>Favoritos</Text>
+        <FlatList data={list} keyExtractor={i=>i.id} renderItem={({item})=>(
+          <View style={styles.card}>
+            <Text style={{fontWeight:"700"}}>{item.nome}</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("ClienteApp", { screen: "DetailsFisher", params: { pesqueiro: item } })}>
+              <Text style={{marginTop:6}}>Ver</Text>
+            </TouchableOpacity>
+          </View>
+        )} />
       </View>
-
-      <FlatList
-        data={favoritos}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: 16 }}
-        ListEmptyComponent={<Text>Nenhum pesqueiro favoritado ainda.</Text>}
-      />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
-
-  // NavBar azul
-  navbar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#007AFF",
-    paddingHorizontal: 12,
-    paddingTop: 45, // status bar
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-  },
-
-  navTitle: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-    textAlign: "center",
-    flex: 1,
-  },
-
-  backButton: { padding: 6 },
-
-  card: {
-    backgroundColor: "#f5f5f5",
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 10,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  image: { width: 80, height: 80, borderRadius: 8, marginRight: 12 },
-  nome: { fontSize: 18, fontWeight: "600" },
-  title: { fontSize: 22, fontWeight: "bold", marginBottom: 16 },
+  card:{padding:12,borderWidth:1,borderColor:"#eee",borderRadius:8, marginBottom:8}
 });

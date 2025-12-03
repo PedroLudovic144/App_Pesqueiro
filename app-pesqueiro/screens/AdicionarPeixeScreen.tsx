@@ -1,69 +1,104 @@
+// AdicionarPeixeScreen.tsx
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+  Alert,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation, useRoute } from "@react-navigation/native";
 
-export default function AdicionarPeixeScreen() {
-  const [especie, setEspecie] = useState("");
+export default function AdicionarPeixeScreen({ route, navigation }: any) {
+  const { lagoId } = route.params;
+  const [nome, setNome] = useState("");
   const [quantidade, setQuantidade] = useState("");
-  const [data, setData] = useState("");
-  const navigation = useNavigation();
-  const route = useRoute();
+  const [valor, setValor] = useState("");
 
-  useEffect(() => {
-    if ((route.params as any)?.item) {
-      const { item } = route.params as any;
-      setEspecie(item.especie);
-      setQuantidade(item.quantidade);
-      setData(item.data);
-    }
-  }, [route.params]);
+  async function salvar() {
+    if (!nome.trim()) return Alert.alert("Erro", "Nome inválido");
+    if (!quantidade || Number(quantidade) <= 0)
+      return Alert.alert("Erro", "Quantidade inválida");
+    if (!valor || Number(valor) <= 0)
+      return Alert.alert("Erro", "Valor inválido");
 
-  const salvarPeixe = async () => {
-    if (!especie || !quantidade || !data) {
-      Alert.alert("Erro", "Preencha todos os campos!");
-      return;
-    }
+    const raw = await AsyncStorage.getItem("lagos");
+    const arr = raw ? JSON.parse(raw) : [];
 
-    const novoPeixe = { especie, quantidade, data };
-    const peixesSalvos = JSON.parse(await AsyncStorage.getItem("peixes") || "[]");
+    const idx = arr.findIndex((l: any) => l.id === lagoId);
+    if (idx < 0) return;
 
-    if ((route.params as any)?.index !== undefined) {
-      peixesSalvos[(route.params as any).index] = novoPeixe;
-    } else {
-      peixesSalvos.push(novoPeixe);
-    }
+    arr[idx].peixes.push({
+      id: Date.now().toString(),
+      nome,
+      quantidade: Number(quantidade),
+      valor: Number(valor),
+    });
 
-    await AsyncStorage.setItem("peixes", JSON.stringify(peixesSalvos));
-    Alert.alert("Sucesso", "Peixe salvo!");
+    await AsyncStorage.setItem("lagos", JSON.stringify(arr));
+
+    Alert.alert("Sucesso", "Peixe adicionado!");
     navigation.goBack();
-  };
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Adicionar Peixe</Text>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Adicionar peixe ao lago</Text>
 
-      <TextInput placeholder="Espécie" style={styles.input} value={especie} onChangeText={setEspecie} />
-      <TextInput
-        placeholder="Quantidade (kg)"
-        style={styles.input}
-        value={quantidade}
-        onChangeText={setQuantidade}
-        keyboardType="numeric"
-      />
-      <TextInput placeholder="Data de inserção (dd/mm/aaaa)" style={styles.input} value={data} onChangeText={setData} />
+        <TextInput
+          placeholder="Nome do peixe"
+          style={styles.input}
+          value={nome}
+          onChangeText={setNome}
+        />
 
-      <TouchableOpacity style={styles.button} onPress={salvarPeixe}>
-        <Text style={styles.buttonText}>Salvar Peixe</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+        <TextInput
+          placeholder="Quantidade"
+          style={styles.input}
+          keyboardType="numeric"
+          value={quantidade}
+          onChangeText={setQuantidade}
+        />
+
+        <TextInput
+          placeholder="Valor por unidade"
+          style={styles.input}
+          keyboardType="numeric"
+          value={valor}
+          onChangeText={setValor}
+        />
+
+        <TouchableOpacity style={styles.btn} onPress={salvar}>
+          <Text style={styles.btnTxt}>Salvar Peixe</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#fff" },
-  title: { fontSize: 22, fontWeight: "bold", marginBottom: 20 },
-  input: { borderWidth: 1, borderColor: "#ccc", borderRadius: 10, padding: 10, marginBottom: 15 },
-  button: { backgroundColor: "#3b82f6", padding: 15, borderRadius: 10, alignItems: "center" },
-  buttonText: { color: "#fff", fontWeight: "bold" },
+  container: { padding: 16 },
+  title: { fontSize: 22, fontWeight: "bold", marginBottom: 12 },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 12,
+  },
+  btn: {
+    backgroundColor: "#2B8AF6",
+    padding: 14,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+  btnTxt: { textAlign: "center", color: "#fff", fontWeight: "700" },
 });
