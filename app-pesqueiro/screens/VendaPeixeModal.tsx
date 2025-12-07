@@ -1,78 +1,137 @@
-// VendaPeixeModal.tsx
-import React, { useState, useEffect } from "react";
-import { Modal, View, Text, TouchableOpacity, TextInput, StyleSheet } from "react-native";
+// screens/VendaPeixeModal.tsx
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function VendaPeixeModal({ visible, peixe, onClose, onConfirm }: any) {
-  const [qtd, setQtd] = useState("1");
+export default function VendaPeixeModal({ route, navigation }: any) {
+  const { lagoId, peixe } = route.params;
+  const [kgVenda, setKgVenda] = useState("");
 
-  useEffect(() => {
-    if (peixe) setQtd("1");
-  }, [peixe]);
+  async function registrarMovimentacao(total: number, kg: number) {
+  const raw = await AsyncStorage.getItem("movimentacoes");
+  const arr = raw ? JSON.parse(raw) : [];
 
-  if (!peixe) return null;
+  const nova = {
+    id: Date.now().toString(),
+    tipo: "venda_peixe",
+    peixe: peixe.nome,
+    quantidade: kg,     // ← CORRIGIDO AQUI!
+    valor: total,
+    data: new Date().toISOString(),
+  };
+
+  arr.push(nova);
+  await AsyncStorage.setItem("movimentacoes", JSON.stringify(arr));
+}
+
+  async function confirmarVenda() {
+    const kg = parseFloat(kgVenda);
+
+    if (!kgVenda || isNaN(kg) || kg <= 0) {
+      Alert.alert("Digite a quantidade válida em KG");
+      return;
+    }
+
+    if (kg > peixe.quantidadeKg) {
+      Alert.alert("Quantidade maior que o disponível!");
+      return;
+    }
+
+    const total = kg * peixe.precoVendaKg;
+
+    const raw = await AsyncStorage.getItem("lagos");
+    let arr = raw ? JSON.parse(raw) : [];
+
+    const idx = arr.findIndex((l: any) => l.id === lagoId);
+    if (idx === -1) return;
+
+    const pidx = arr[idx].peixes.findIndex((p: any) => p.id === peixe.id);
+    if (pidx === -1) return;
+
+    // Subtrai do estoque
+    arr[idx].peixes[pidx].quantidadeKg -= kg;
+
+    await AsyncStorage.setItem("lagos", JSON.stringify(arr));
+
+    // REGISTRA A MOVIMENTAÇÃO
+    await registrarMovimentacao(total, kg);
+
+    Alert.alert("Venda realizada!", `Total: R$ ${total.toFixed(2)}`, [
+      {
+        text: "OK",
+        onPress: () =>
+          navigation.navigate("DrawerApp", {
+            screen: "PeixesDoLago",
+            params: { lagoId },
+          }),
+      },
+    ]);
+  }
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.overlay}>
-        <View style={styles.box}>
-          <Text style={styles.title}>Vender Peixe</Text>
-          <Text>{peixe.nome}</Text>
-          <Text>Estoque: {peixe.quantidade}</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Vender {peixe.nome}</Text>
 
-          <TextInput
-            style={styles.input}
-            keyboardType="numeric"
-            value={qtd}
-            onChangeText={setQtd}
-            placeholder="Quantidade"
-          />
+      <Text style={styles.label}>Disponível: {peixe.quantidadeKg} KG</Text>
+      <Text style={styles.label}>
+        Preço de venda: R$ {peixe.precoVendaKg}/kg
+      </Text>
 
-          <View style={styles.row}>
-            <TouchableOpacity style={styles.cancel} onPress={onClose}>
-              <Text style={styles.cancelTxt}>Cancelar</Text>
-            </TouchableOpacity>
+      <TextInput
+        placeholder="KG para vender"
+        value={kgVenda}
+        onChangeText={setKgVenda}
+        keyboardType="numeric"
+        style={styles.input}
+      />
 
-            <TouchableOpacity
-              style={styles.confirm}
-              onPress={() => {
-                const n = Number(qtd);
-                if (n > 0 && n <= peixe.quantidade) onConfirm(n);
-                else alert("Quantidade inválida");
-              }}
-            >
-              <Text style={styles.confirmTxt}>Confirmar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
+      {kgVenda ? (
+        <Text style={styles.total}>
+          Total: R$ {(Number(kgVenda) * peixe.precoVendaKg).toFixed(2)}
+        </Text>
+      ) : null}
+
+      <TouchableOpacity style={styles.btn} onPress={confirmarVenda}>
+        <Text style={styles.btnTxt}>Confirmar Venda</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.btn, { backgroundColor: "#777", marginTop: 8 }]}
+        onPress={() => navigation.goBack()}
+      >
+        <Text style={styles.btnTxt}>Cancelar</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  box: {
-    backgroundColor: "#fff",
-    padding: 20,
-    width: "80%",
-    borderRadius: 12,
-  },
-  title: { fontSize: 20, fontWeight: "700", marginBottom: 10 },
+  container: { padding: 18, flex: 1, backgroundColor: "#fff" },
+  title: { fontSize: 22, fontWeight: "700", marginBottom: 14 },
+  label: { fontSize: 16, marginTop: 4 },
   input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 8,
+    backgroundColor: "#eee",
+    padding: 12,
     borderRadius: 8,
-    marginVertical: 12,
+    marginTop: 12,
   },
-  row: { flexDirection: "row", justifyContent: "space-between" },
-  cancel: { padding: 12, backgroundColor: "#bbb", borderRadius: 8, width: "45%" },
-  cancelTxt: { textAlign: "center", fontWeight: "700" },
-  confirm: { padding: 12, backgroundColor: "#28a745", borderRadius: 8, width: "45%" },
-  confirmTxt: { textAlign: "center", color: "#fff", fontWeight: "700" },
+  total: {
+    marginTop: 10,
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  btn: {
+    backgroundColor: "#2B8AF6",
+    padding: 14,
+    borderRadius: 10,
+    marginTop: 24,
+  },
+  btnTxt: { color: "#fff", textAlign: "center", fontWeight: "700" },
 });

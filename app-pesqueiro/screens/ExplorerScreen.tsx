@@ -1,116 +1,217 @@
-// ExplorerScreen.tsx
+// screens/ExplorerScreen.tsx
 import React, { useEffect, useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
 import {
+  SafeAreaView,
   View,
+  Text,
   TextInput,
   FlatList,
-  Text,
+  Image,
   TouchableOpacity,
-  Button,
   StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
 
-const SAMPLE = [
-  { id: "1", nome: "Pesqueiro Cantareira", endereco: "Av. Luís Carlos Gentile de Laet, 2500 - Tremembé, São Paulo", descricao: "Pesqueiro da zona norte de São Paulo. Contato: (11) 2204-7754", avaliacao: 4.3, totalAvaliacoes: 667 },
-  { id: "2", nome: "Pesqueiro Três Lagos", endereco: "Estr. do M'Boi Mirim, 1200 - SP", descricao: "Ambiente familiar, 3 lagos.", avaliacao: 4.6, totalAvaliacoes: 124 },
-  { id: "3", nome: "Pesqueiro Estância Pescador", endereco: "R. das Flores, 40 - Campinas", descricao: "Ótimo para campeonatos.", avaliacao: 4.1, totalAvaliacoes: 89 },
-  { id: "4", nome: "Pesqueiro Paraíso dos Peixes", endereco: "Rod. dos Bandeirantes km 18", descricao: "Lagos bem cuidados.", avaliacao: 4.5, totalAvaliacoes: 201 },
-  { id: "5", nome: "Pesqueiro Lago Azul", endereco: "Av. Central, 500 - Santos", descricao: "Vista para o lago.", avaliacao: 4.0, totalAvaliacoes: 54 },
-  { id: "6", nome: "Pesqueiro Tilápia Real", endereco: "R. do Pescador, 99 - Guarujá", descricao: "Especializado em Tilápia.", avaliacao: 4.2, totalAvaliacoes: 140 },
-  { id: "7", nome: "Pesqueiro Colinas do Sol", endereco: "Estr. Velha, 77 - Jundiaí", descricao: "Recanto na serra.", avaliacao: 4.7, totalAvaliacoes: 98 },
-  { id: "8", nome: "Pesqueiro Vale Verde", endereco: "Av. Verde, 10 - Itu", descricao: "Natureza e churrasqueiras.", avaliacao: 4.4, totalAvaliacoes: 77 },
-  { id: "9", nome: "Pesqueiro Recanto da Pesca", endereco: "R. Lagoa, 321 - Piracicaba", descricao: "Bom para família.", avaliacao: 4.1, totalAvaliacoes: 45 },
-  { id: "10", nome: "Pesqueiro Boa Esperança", endereco: "Av. Esperança, 44 - São José", descricao: "Ambiente acolhedor.", avaliacao: 4.0, totalAvaliacoes: 34 },
-  { id: "11", nome: "Pesqueiro Rancho do Pescador", endereco: "R. do Rancho, 13 - Bertioga", descricao: "Rancho com pesca esportiva.", avaliacao: 4.6, totalAvaliacoes: 210 },
-  { id: "12", nome: "Pesqueiro Vitória Régia", endereco: "Av. das Águas, 88 - Itu", descricao: "Lagos ornamentais e grandes.", avaliacao: 4.8, totalAvaliacoes: 320 },
-];
-
-export default function ExplorerScreen({ navigation, route }: any) {
-  const user = route?.params?.user ?? { id: "guest" };
-  const [q, setQ] = useState("");
+export default function ExplorerScreen() {
+  const navigation = useNavigation<any>();
   const [pesqueiros, setPesqueiros] = useState<any[]>([]);
-  const [favoritosSet, setFavoritosSet] = useState<Set<string>>(new Set());
+  const [filtered, setFiltered] = useState<any[]>([]);
+  const [busca, setBusca] = useState("");
 
   useEffect(() => {
-    seedIfNeeded();
-    carregar();
-    const unsub = navigation.addListener("focus", carregar);
-    return unsub;
+    (async () => {
+      await seedIfNeeded();
+      await carregarPesqueiros();
+    })();
   }, []);
 
   async function seedIfNeeded() {
-    const raw = await AsyncStorage.getItem("pesqueiros");
-    if (!raw) {
-      await AsyncStorage.setItem("pesqueiros", JSON.stringify(SAMPLE));
+  const lagosRaw = await AsyncStorage.getItem("lagos");
+  if (lagosRaw) return; // Já existe, não recriar
+
+  const structure = [
+    {
+      id: "L1",
+      nome: "Lago Principal",
+      pesqueiroId: "1", // MESMO ID do Pesqueiro Cantareira
+      peixes: [
+        { id: "P11", nome: "Carpa Cabeçuda" },
+        { id: "P12", nome: "Tilápia" },
+        { id: "P13", nome: "Pacu" }
+      ],
+    },
+    {
+      id: "L2",
+      nome: "Lago Familiar",
+      pesqueiroId: "2", // MESMO ID do Pesqueiro do Arnaldo
+      peixes: [
+        { id: "P21", nome: "Tambaqui" },
+        { id: "P22", nome: "Dourado" }
+      ],
+    },
+    {
+      id: "L3",
+      nome: "Lago Tranquilo",
+      pesqueiroId: "3", // MESMO ID do Pesqueiro Paraíso
+      peixes: [
+        { id: "P31", nome: "Robalo" },
+        { id: "P32", nome: "Pintado" }
+      ],
+    },
+  ];
+
+  await AsyncStorage.setItem("lagos", JSON.stringify(structure));
+}
+
+
+  async function carregarPesqueiros() {
+    const base = [
+      {
+        id: "1",
+        nome: "Pesqueiro Cantareira",
+        avaliacao: 4.3,
+        totalAvaliacoes: 667,
+        imagem: require("../assets/images/pesqueirocantareira.png"),
+        endereco: "Av. Luís Carlos Gentile de Laet, 2500 - Tremembé, SP",
+        descricao: "Pesqueiro tradicional da zona norte de SP.",
+      },
+      {
+        id: "2",
+        nome: "Pesqueiro do Arnaldo",
+        avaliacao: 4.8,
+        totalAvaliacoes: 988,
+        imagem: require("../assets/images/pesqueiroarnaldao.png"),
+        endereco: "Rua do Lago Azul, 45 - Mairiporã, SP",
+        descricao: "Ambiente familiar com ótimas estruturas.",
+      },
+      {
+        id: "3",
+        nome: "Pesqueiro Paraíso",
+        avaliacao: 4.5,
+        totalAvaliacoes: 542,
+        imagem: require("../assets/images/pesqueiroparaiso.jpg"),
+        endereco: "Estrada dos Pinheiros, 900 - Atibaia",
+        descricao: "Ambiente tranquilo com boa variedade de peixes.",
+      },
+    ];
+
+    setPesqueiros(base);
+    setFiltered(base);
+  }
+
+  function buscar(texto: string) {
+    setBusca(texto);
+
+    if (!texto.trim()) {
+      setFiltered(pesqueiros);
+      return;
     }
+
+    setFiltered(
+      pesqueiros.filter((p) =>
+        p.nome.toLowerCase().includes(texto.toLowerCase())
+      )
+    );
   }
-
-  async function carregar() {
-    const raw = await AsyncStorage.getItem("pesqueiros");
-    const arr = raw ? JSON.parse(raw) : [];
-    setPesqueiros(arr);
-
-    const rawFav = await AsyncStorage.getItem(`favoritos_${user.id}`);
-    setFavoritosSet(rawFav ? new Set(JSON.parse(rawFav)) : new Set());
-  }
-
-  async function toggleFav(id: string) {
-    const key = `favoritos_${user.id}`;
-    const rawFav = await AsyncStorage.getItem(key);
-    const arr = rawFav ? JSON.parse(rawFav) : [];
-    const idx = arr.indexOf(id);
-    if (idx >= 0) arr.splice(idx, 1);
-    else arr.push(id);
-    await AsyncStorage.setItem(key, JSON.stringify(arr));
-    setFavoritosSet(new Set(arr));
-  }
-
-  const lista = pesqueiros.filter((p) => p.nome?.toLowerCase().includes(q.toLowerCase()));
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
-        <View style={{ padding: 12, flex: 1 }}>
-          <TextInput placeholder="Buscar pesqueiro por nome" style={styles.input} value={q} onChangeText={setQ} />
-
-          <FlatList
-            data={lista}
-            keyExtractor={(i) => i.id}
-            renderItem={({ item }) => (
-              <View style={styles.card}>
-                <Text style={{ fontWeight: "700" }}>{item.nome}</Text>
-                <Text>{item.endereco}</Text>
-                <Text numberOfLines={2} style={{ marginTop: 6 }}>{item.descricao}</Text>
-
-                <View style={{ flexDirection: "row", marginTop: 10, alignItems: "center" }}>
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate("ClienteApp", { screen: "DetailsFisher", params: { pesqueiro: item } })}
-                  >
-                    <Text style={{ marginRight: 14 }}>Ver</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity onPress={() => toggleFav(item.id)} style={{ padding: 6 }}>
-                    <Text>{favoritosSet.has(item.id) ? "❤️ Favoritado" : "♡ Favoritar"}</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-            ListEmptyComponent={() => <Text>Nenhum pesqueiro encontrado.</Text>}
-          />
-
-          <View style={{ height: 12 }} />
-          <Button title="Meus Favoritos" onPress={() => navigation.navigate("ClienteApp", { screen: "Favoritos", params: { user } })} />
+    <SafeAreaView style={styles.safe}>
+      {/* HEADER */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.title}>Pesqueiros Próximos</Text>
+          <Text style={styles.subtitle}>Encontre o melhor local</Text>
         </View>
-      </KeyboardAvoidingView>
+
+        {/* Botão Favoritos */}
+        <TouchableOpacity
+          style={styles.favBtn}
+          onPress={() => navigation.navigate("Favoritos")}
+        >
+          <Ionicons name="heart" size={20} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Busca */}
+      <View style={styles.searchBox}>
+        <Ionicons name="search" size={18} color="#888" />
+        <TextInput
+          placeholder="Buscar pesqueiro..."
+          value={busca}
+          onChangeText={buscar}
+          style={styles.searchInput}
+          placeholderTextColor="#999"
+        />
+        {busca !== "" && (
+          <TouchableOpacity onPress={() => buscar("")}>
+            <Ionicons name="close-circle" size={18} color="#888" />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Lista */}
+      <FlatList
+        data={filtered}
+        keyExtractor={(i) => i.id}
+        contentContainerStyle={styles.listContent}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() =>
+              navigation.navigate("DetailsFisher", { pesqueiro: item })
+            }
+          >
+            <Image source={item.imagem} style={styles.thumb} />
+            <View style={{ marginLeft: 12, flex: 1 }}>
+              <Text style={styles.name}>{item.nome}</Text>
+              <Text style={styles.addr} numberOfLines={1}>
+                {item.endereco}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  input: { borderWidth: 1, borderColor: "#ddd", padding: 8, borderRadius: 8, marginBottom: 12 },
-  card: { padding: 12, borderWidth: 1, borderColor: "#eee", borderRadius: 8, marginBottom: 8 }
+  safe: { flex: 1, backgroundColor: "#ffffff" },
+  header: {
+    padding: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  title: { fontSize: 20, fontWeight: "700" },
+  subtitle: { color: "#666", marginTop: 2 },
+  favBtn: { backgroundColor: "#E53935", padding: 10, borderRadius: 8 },
+  searchBox: {
+    marginHorizontal: 16,
+    marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f6f6f6",
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#eee",
+  },
+  searchInput: { flex: 1, marginLeft: 8 },
+  listContent: { paddingHorizontal: 12, paddingBottom: 80 },
+  card: {
+    backgroundColor: "#fff",
+    padding: 12,
+    marginVertical: 8,
+    borderRadius: 10,
+    elevation: 2,
+    marginHorizontal: 4,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  thumb: { width: 96, height: 64, borderRadius: 8 },
+  name: { fontWeight: "700", fontSize: 16 },
+  addr: { color: "#666", marginTop: 4 },
 });

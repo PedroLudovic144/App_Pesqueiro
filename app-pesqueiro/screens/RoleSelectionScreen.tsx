@@ -26,10 +26,6 @@ export default function RoleSelectionScreen({ navigation, route }: any) {
           onPress={() => navigation.navigate("ClienteApp", { user })}
         />
       </View>
-
-      <Text style={styles.small}>
-        Se você não tem pesqueiro ainda, entre como gerente e registre um.
-      </Text>
     </View>
   );
 }

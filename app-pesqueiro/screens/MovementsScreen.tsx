@@ -1,144 +1,123 @@
-// MovementsScreen.tsx
+// screens/MovementsScreen.tsx
 import React, { useEffect, useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  View,
-  Text,
-  FlatList,
-  Button,
-  StyleSheet,
-  Alert,
-  TouchableOpacity,
-  Platform,
-} from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import AddMovementoModal from "./AddMovementoModal";
-
-const genId = () => Date.now().toString() + Math.random().toString(16).slice(2);
 
 export default function MovementsScreen({ navigation }: any) {
   const [movs, setMovs] = useState<any[]>([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editing, setEditing] = useState<any | null>(null);
 
   useEffect(() => {
-    carregar();
     const unsub = navigation.addListener("focus", carregar);
     return unsub;
   }, []);
 
   async function carregar() {
     const raw = await AsyncStorage.getItem("movimentacoes");
-    const arr = raw ? JSON.parse(raw) : [];
-    // normalizar tipo e ordenar por data/hora (assume dd/mm/yyyy)
-    arr.forEach((m: any) => {
-      if (m.tipo && typeof m.tipo === "string") m.tipo = m.tipo.toLowerCase();
-    });
-    arr.sort((a: any, b: any) => {
-      // try to parse dd/mm/yyyy
-      const pa = String(a.data || "").split("/");
-      const pb = String(b.data || "").split("/");
-      const da = pa.length === 3 ? new Date(+pa[2], +pa[1] - 1, +pa[0]) : new Date();
-      const db = pb.length === 3 ? new Date(+pb[2], +pb[1] - 1, +pb[0]) : new Date();
-      return db.getTime() - da.getTime();
-    });
-    setMovs(arr);
+    setMovs(raw ? JSON.parse(raw) : []);
   }
 
-  async function adicionar(m: any) {
-    const raw = await AsyncStorage.getItem("movimentacoes");
-    const arr = raw ? JSON.parse(raw) : [];
-    m.id = genId();
-    arr.push(m);
-    await AsyncStorage.setItem("movimentacoes", JSON.stringify(arr));
-    setModalVisible(false);
-    carregar();
-  }
-
-  async function salvarEdicao(edited: any) {
-    const raw = await AsyncStorage.getItem("movimentacoes");
-    const arr = raw ? JSON.parse(raw) : [];
-    const idx = arr.findIndex((x: any) => x.id === edited.id);
-    if (idx >= 0) arr[idx] = edited;
-    await AsyncStorage.setItem("movimentacoes", JSON.stringify(arr));
-    setEditing(null);
-    setModalVisible(false);
-    carregar();
-  }
-
-  async function remover(id: string) {
-    Alert.alert("Remover", "Deseja remover essa movimentação?", [
-      { text: "Cancelar" },
-      {
-        text: "Remover",
-        onPress: async () => {
-          const raw = await AsyncStorage.getItem("movimentacoes");
-          const arr = raw ? JSON.parse(raw) : [];
-          const nova = arr.filter((x: any) => x.id !== id);
-          await AsyncStorage.setItem("movimentacoes", JSON.stringify(nova));
-          carregar();
-        },
-      },
-    ]);
-  }
-
-  function abrirNovo() {
-    setEditing(null);
-    setModalVisible(true);
-  }
-
-  function abrirEditar(item: any) {
-    setEditing(item);
-    setModalVisible(true);
+  async function excluirMov(id: string) {
+    const dados = movs.filter((m) => m.id !== id);
+    await AsyncStorage.setItem("movimentacoes", JSON.stringify(dados));
+    setMovs(dados);
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Movimentações</Text>
-        <Button title="Adicionar" onPress={abrirNovo} />
-      </View>
+    <View style={styles.container}>
+      <Text style={styles.title}>Movimentações</Text>
+
+      <TouchableOpacity
+        style={styles.addBtn}
+        onPress={() => navigation.navigate("CriarMovimentacao")}
+      >
+        <Text style={styles.addTxt}>+ Nova Movimentação</Text>
+      </TouchableOpacity>
 
       <FlatList
         data={movs}
         keyExtractor={(i: any) => i.id}
-        contentContainerStyle={{ padding: 12, paddingBottom: 40 }}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-              <Text style={styles.date}>{item.data} {item.hora ?? ""}</Text>
-              <Text style={{ fontWeight: "700" }}>{item.tipo === "entrada" ? "➕ Entrada" : "➖ Saída"}</Text>
-            </View>
-            <Text>R$ {Number(item.valor).toFixed(2)}</Text>
-            <Text>{item.produto}</Text>
-            {item.observacao ? <Text style={{ color: "#666" }}>{item.observacao}</Text> : null}
+            <Text style={styles.tipo}>
+              {item.tipo === "entrada" ? "🟢 ENTRADA" : "🔴 SAÍDA"}
+            </Text>
 
-            <View style={{ flexDirection: "row", marginTop: 10 }}>
-              <Button title="Editar" onPress={() => abrirEditar(item)} />
-              <View style={{ width: 8 }} />
-              <Button title="Apagar" color="#cc3333" onPress={() => remover(item.id)} />
+            <Text style={styles.desc}>{item.descricao}</Text>
+            <Text style={styles.info}>Qtd: {item.quantidade}</Text>
+            <Text style={styles.info}>
+              Valor: R$ {Number(item.valor).toFixed(2)}
+            </Text>
+            <Text style={styles.info}>
+              Total: R$ {Number(item.total).toFixed(2)}
+            </Text>
+
+            <Text style={styles.data}>
+              {new Date(item.data).toLocaleString()}
+            </Text>
+
+            <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
+              <TouchableOpacity
+                style={styles.editBtn}
+                onPress={() =>
+                  navigation.navigate("EditarMovimentacao", { mov: item })
+                }
+              >
+                <Text style={styles.editTxt}>Editar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.removeBtn}
+                onPress={() => excluirMov(item.id)}
+              >
+                <Text style={styles.removeTxt}>Excluir</Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}
-        ListEmptyComponent={() => <View style={{ padding: 12 }}><Text>Nenhuma movimentação ainda.</Text></View>}
+        ListEmptyComponent={() => (
+          <Text style={{ textAlign: "center", marginTop: 20, color: "#666" }}>
+            Nenhuma movimentação cadastrada.
+          </Text>
+        )}
       />
-
-      <AddMovementoModal
-        visivel={modalVisible}
-        onClose={() => { setModalVisible(false); setEditing(null); }}
-        onSave={(m: any) => {
-          if (editing) salvarEdicao({ ...editing, ...m });
-          else adicionar(m);
-        }}
-        initialData={editing}
-      />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { padding: 12, backgroundColor: "#2B8AF6", flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  title: { color: "#fff", fontSize: 18, fontWeight: "700" },
-  card: { padding: 12, borderWidth: 1, borderColor: "#eee", borderRadius: 8, marginBottom: 10 },
-  date: { color: "#666" },
+  container: { padding: 16, flex: 1 },
+  title: { fontSize: 24, fontWeight: "700", marginBottom: 12 },
+  card: {
+    backgroundColor: "#fff",
+    padding: 14,
+    borderRadius: 10,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  tipo: { fontSize: 16, fontWeight: "700", marginBottom: 4 },
+  desc: { fontSize: 16, marginBottom: 4 },
+  info: { fontSize: 14 },
+  data: { fontSize: 12, color: "#555", marginTop: 6 },
+  removeBtn: {
+    backgroundColor: "#d63031",
+    padding: 8,
+    borderRadius: 8,
+    flex: 1,
+  },
+  removeTxt: { color: "#fff", textAlign: "center", fontWeight: "700" },
+  editBtn: {
+    backgroundColor: "#0984e3",
+    padding: 8,
+    borderRadius: 8,
+    flex: 1,
+  },
+  editTxt: { color: "#fff", textAlign: "center", fontWeight: "700" },
+  addBtn: {
+    backgroundColor: "#00b894",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 15,
+  },
+  addTxt: { color: "#fff", fontWeight: "700", textAlign: "center" },
 });

@@ -1,104 +1,101 @@
-// AdicionarPeixeScreen.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  KeyboardAvoidingView,
-  ScrollView,
-  Platform,
   Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import uuid from "react-native-uuid";
 
 export default function AdicionarPeixeScreen({ route, navigation }: any) {
-  const { lagoId } = route.params;
+  const lagoId = route.params?.lagoId;
+
   const [nome, setNome] = useState("");
-  const [quantidade, setQuantidade] = useState("");
-  const [valor, setValor] = useState("");
+  const [pesoKg, setPesoKg] = useState("");
+  const [precoCompraKg, setPrecoCompraKg] = useState("");
+  const [precoVendaKg, setPrecoVendaKg] = useState("");
 
   async function salvar() {
-    if (!nome.trim()) return Alert.alert("Erro", "Nome inválido");
-    if (!quantidade || Number(quantidade) <= 0)
-      return Alert.alert("Erro", "Quantidade inválida");
-    if (!valor || Number(valor) <= 0)
-      return Alert.alert("Erro", "Valor inválido");
+    if (!nome || !pesoKg || !precoCompraKg || !precoVendaKg) {
+      Alert.alert("Preencha todos os campos!");
+      return;
+    }
 
     const raw = await AsyncStorage.getItem("lagos");
-    const arr = raw ? JSON.parse(raw) : [];
+    const lagos = raw ? JSON.parse(raw) : [];
 
-    const idx = arr.findIndex((l: any) => l.id === lagoId);
-    if (idx < 0) return;
+    const index = lagos.findIndex((l: any) => l.id === lagoId);
+    if (index === -1) return;
 
-    arr[idx].peixes.push({
-      id: Date.now().toString(),
+    const novoPeixe = {
+      id: uuid.v4(),
       nome,
-      quantidade: Number(quantidade),
-      valor: Number(valor),
-    });
+      quantidadeKg: parseFloat(pesoKg),
+      precoCompraKg: parseFloat(precoCompraKg),
+      precoVendaKg: parseFloat(precoVendaKg),
+    };
 
-    await AsyncStorage.setItem("lagos", JSON.stringify(arr));
+    lagos[index].peixes.push(novoPeixe);
 
-    Alert.alert("Sucesso", "Peixe adicionado!");
-    navigation.goBack();
+    await AsyncStorage.setItem("lagos", JSON.stringify(lagos));
+
+    navigation.navigate("PeixesDoLago", { lagoId });
   }
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Adicionar peixe ao lago</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Adicionar Peixe</Text>
 
-        <TextInput
-          placeholder="Nome do peixe"
-          style={styles.input}
-          value={nome}
-          onChangeText={setNome}
-        />
+      <TextInput
+        style={styles.input}
+        placeholder="Nome"
+        value={nome}
+        onChangeText={setNome}
+      />
 
-        <TextInput
-          placeholder="Quantidade"
-          style={styles.input}
-          keyboardType="numeric"
-          value={quantidade}
-          onChangeText={setQuantidade}
-        />
+      <TextInput
+        style={styles.input}
+        placeholder="Quantidade em KG"
+        keyboardType="numeric"
+        value={pesoKg}
+        onChangeText={setPesoKg}
+      />
 
-        <TextInput
-          placeholder="Valor por unidade"
-          style={styles.input}
-          keyboardType="numeric"
-          value={valor}
-          onChangeText={setValor}
-        />
+      <TextInput
+        style={styles.input}
+        placeholder="Preço COMPRA (R$/kg)"
+        keyboardType="numeric"
+        value={precoCompraKg}
+        onChangeText={setPrecoCompraKg}
+      />
 
-        <TouchableOpacity style={styles.btn} onPress={salvar}>
-          <Text style={styles.btnTxt}>Salvar Peixe</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      <TextInput
+        style={styles.input}
+        placeholder="Preço VENDA (R$/kg)"
+        keyboardType="numeric"
+        value={precoVendaKg}
+        onChangeText={setPrecoVendaKg}
+      />
+
+      <TouchableOpacity style={styles.btn} onPress={salvar}>
+        <Text style={styles.btnTxt}>Salvar</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { padding: 16 },
-  title: { fontSize: 22, fontWeight: "bold", marginBottom: 12 },
+  title: { fontSize: 22, fontWeight: "700", marginBottom: 12 },
   input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
+    backgroundColor: "#eee",
     padding: 12,
     borderRadius: 10,
     marginBottom: 12,
   },
-  btn: {
-    backgroundColor: "#2B8AF6",
-    padding: 14,
-    borderRadius: 10,
-    marginTop: 10,
-  },
-  btnTxt: { textAlign: "center", color: "#fff", fontWeight: "700" },
+  btn: { backgroundColor: "#2B8AF6", padding: 14, borderRadius: 10 },
+  btnTxt: { textAlign: "center", fontWeight: "700", color: "#fff" },
 });

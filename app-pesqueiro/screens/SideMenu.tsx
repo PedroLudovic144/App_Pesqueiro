@@ -12,9 +12,36 @@ export default function SideMenu({ navigation }: any) {
   }, []);
 
   async function carregar() {
-    const raw = await AsyncStorage.getItem("pesqueiroAtual");
-    if (raw) setUser(JSON.parse(raw));
+  let raw = await AsyncStorage.getItem("pesqueiroAtual");
+
+  // Se não existir, cria um modelo
+  if (!raw) {
+    const modelo = {
+      id: "modelo-1",
+      nome: "Pesqueiro HAS",
+      nomeDono: "Rafiq",
+      local: "Rua Alcantara, 113 - SP",
+      endereco: "Rua Alcantara, 113 - SP",
+      telefone: "11 99999-9999",
+      descricao: "",
+      foto: null,
+      email: ""
+    };
+
+    await AsyncStorage.setItem("pesqueiroAtual", JSON.stringify(modelo));
+
+    // Também salva nos pesqueiros
+    const listaRaw = await AsyncStorage.getItem("pesqueiros");
+    const lista = listaRaw ? JSON.parse(listaRaw) : [];
+    lista.push(modelo);
+    
+    await AsyncStorage.setItem("pesqueiros", JSON.stringify(lista));
+    raw = JSON.stringify(modelo);
   }
+
+  setUser(JSON.parse(raw));
+}
+
 
   async function logout() {
     await AsyncStorage.removeItem("pesqueiroAtual");
@@ -32,7 +59,7 @@ export default function SideMenu({ navigation }: any) {
           }
           style={styles.avatar}
         />
-        <Text style={styles.name}>{user?.nome ?? "Usuário"}</Text>
+        <Text style={styles.name}>{user?.nome ?? "Rafiq"}</Text>
         <Text style={styles.email}>{user?.email ?? ""}</Text>
 
         <TouchableOpacity
@@ -45,40 +72,36 @@ export default function SideMenu({ navigation }: any) {
       </View>
 
       {/* Itens */}
+      
+      <TouchableOpacity
+        style={styles.item}
+        onPress={() => navigation.navigate("DrawerApp", { screen: "PesqueiroInfo" })}
+      >
+        <Text style={styles.itemText}> Informações do Pesqueiro</Text>
+      </TouchableOpacity>
+      
       <TouchableOpacity
         style={styles.item}
         onPress={() => navigation.navigate("DrawerApp", { screen: "Movimentacoes" })}
       >
-        <Text style={styles.itemText}>💰 Movimentações</Text>
+        <Text style={styles.itemText}> Movimentações</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.item}
         onPress={() => navigation.navigate("DrawerApp", { screen: "Lagos" })}
       >
-        <Text style={styles.itemText}>🌊 Lagos</Text>
+        <Text style={styles.itemText}> Lagos</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.item}
         onPress={() => navigation.navigate("DrawerApp", { screen: "ListaEquipamentos" })}
       >
-        <Text style={styles.itemText}>🎣 Equipamentos</Text>
+        <Text style={styles.itemText}> Equipamentos</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.item}
-        onPress={() => navigation.navigate("DrawerApp", { screen: "Favoritos" })}
-      >
-        <Text style={styles.itemText}>❤️ Favoritos</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.item}
-        onPress={() => navigation.navigate("DrawerApp", { screen: "PesqueiroInfo" })}
-      >
-        <Text style={styles.itemText}>📊 Informações do Pesqueiro</Text>
-      </TouchableOpacity>
+      
 
       <View style={styles.divider} />
 

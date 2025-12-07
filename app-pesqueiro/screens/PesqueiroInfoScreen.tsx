@@ -1,60 +1,87 @@
-// PesqueiroInfoScreen.tsx
+// screens/PesqueiroInfoScreen.tsx
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, FlatList } from "react-native";
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function PesqueiroInfoScreen({ navigation }: any) {
-  const [lagos, setLagos] = useState<any[]>([]);
+export default function PesqueiroInfoScreen({ route, navigation }: any) {
+  const pesqueiroId = route.params?.pesqueiroId ?? null;
   const [movs, setMovs] = useState<any[]>([]);
-  const [lucroMes, setLucroMes] = useState(0);
-  const [totalPeixes, setTotalPeixes] = useState(0);
+  const [lagos, setLagos] = useState<any[]>([]);
+  const [totalPeixes, setTotalPeixes] = useState<number>(0);
+  const [lucroMes, setLucroMes] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     carregar();
-    navigation.addListener("focus", carregar);
+    const unsub = navigation.addListener("focus", carregar);
+    return unsub;
   }, []);
 
   async function carregar() {
-    // lagos
-    const rawLagos = await AsyncStorage.getItem("lagos");
-    const arrLagos = rawLagos ? JSON.parse(rawLagos) : [];
-    setLagos(arrLagos);
+    setLoading(true);
+    try {
+      const rawMov = await AsyncStorage.getItem("movimentacoes");
+      const arrMov = rawMov ? JSON.parse(rawMov) : [];
+      setMovs(arrMov);
 
-    // peixes totais
-    let soma = 0;
-    arrLagos.forEach((l: any) =>
-      l.peixes.forEach((p: any) => {
-        soma += p.quantidade;
-      })
-    );
-    setTotalPeixes(soma);
+      const rawL = await AsyncStorage.getItem("lagos");
+      const arrL = rawL ? JSON.parse(rawL) : [];
+      const filtrados = pesqueiroId ? arrL.filter((l: any) => l.pesqueiroId === pesqueiroId) : arrL;
+      setLagos(filtrados);
 
-    // movimentações
-    const rawMovs = await AsyncStorage.getItem("movimentacoes");
-    const arrMovs = rawMovs ? JSON.parse(rawMovs) : [];
-    setMovs(arrMovs);
+      const totalP = filtrados.reduce(
+        (acc: number, l: any) =>
+          acc +
+          (l.peixes
+            ? l.peixes.reduce((s: number, p: any) => s + (Number(p.quantidadeKg) || 0), 0)
+            : 0),
+        0
+      );
+      setTotalPeixes(totalP);
 
-    // lucro do mês (somar entradas - saídas)
-    let lucro = 0;
-    const mesAtual = new Date().getMonth();
+      // ======================
+      // CORREÇÃO DO LUCRO
+      // ======================
+      const mes = new Date().getMonth();
+      let entradas = 0;
+      let saidas = 0;
 
-    arrMovs.forEach((m: any) => {
-      const data = new Date(m.data);
-      if (data.getMonth() === mesAtual) {
-        if (m.tipo === "entrada") lucro += Number(m.valor);
-        if (m.tipo === "saida") lucro -= Number(m.valor);
-      }
-    });
+      (arrMov || []).forEach((m: any) => {
+        const d = m.data ? new Date(m.data) : new Date();
+        if (d.getMonth() !== mes) return;
 
-    setLucroMes(lucro);
+        const tipo = (m.tipo || "").toLowerCase();
+
+        // Todas as formas possíveis de venda agora contam
+        if (tipo.includes("venda") || tipo.includes("entrada") || tipo.includes("aluguel")) {
+          entradas += Number(m.valor || 0);
+        }
+
+        if (tipo.includes("saida") || tipo.includes("compra")) {
+          saidas += Number(m.valor || 0);
+        }
+      });
+
+      setLucroMes(entradas - saidas);
+    } catch (err) {
+      console.log("erro carregar pesqueiro info", err);
+    }
+    setLoading(false);
   }
 
+  if (loading)
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#2B8AF6" />
+      </View>
+    );
+
   return (
-    <View style={{ flex: 1, padding: 16 }}>
+    <ScrollView style={styles.container}>
       <Text style={styles.title}>Informações do Pesqueiro</Text>
 
-      <View style={styles.box}>
-        <Text style={styles.label}>Lucro no mês:</Text>
+      <View style={[styles.box, { marginTop: 12 }]}>
+        <Text style={styles.label}>Lucro do mês</Text>
         <Text style={styles.valor}>R$ {lucroMes.toFixed(2)}</Text>
       </View>
 
@@ -64,69 +91,46 @@ export default function PesqueiroInfoScreen({ navigation }: any) {
       </View>
 
       <View style={styles.box}>
-        <Text style={styles.label}>Total de peixes:</Text>
+        <Text style={styles.label}>Total de peixes (KG):</Text>
         <Text style={styles.valor}>{totalPeixes}</Text>
       </View>
 
-      <TouchableOpacity
-        style={styles.btn}
-        onPress={() => navigation.navigate("ListaLagos")}
-      >
+      <TouchableOpacity style={styles.btn} onPress={() => navigation.navigate("Lagos", { pesqueiroId })}>
         <Text style={styles.btnTxt}>Gerenciar Lagos</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={[styles.btn, { backgroundColor: "#1abc9c" }]}
-        onPress={() => navigation.navigate("Equipamentos")}
+        onPress={() => navigation.navigate("ListaEquipamentos")}
       >
         <Text style={styles.btnTxt}>Gerenciar Equipamentos</Text>
       </TouchableOpacity>
 
-      <Text style={styles.subTitle}>Últimas Movimentações</Text>
+      <Text style={{ marginTop: 12, fontWeight: "700" }}>Movimentações do mês</Text>
 
-      <FlatList
-        data={movs.slice(-5).reverse()}
-        keyExtractor={(i: any) => i.id}
-        renderItem={({ item }) => (
-          <View style={styles.movCard}>
-            <Text style={styles.movTipo}>{item.tipo.toUpperCase()}</Text>
-            <Text>R$ {item.valor}</Text>
-            <Text style={styles.movData}>{item.data}</Text>
-            <Text>{item.produto}</Text>
+      {(movs || [])
+        .filter((m: any) => {
+          const d = m.data ? new Date(m.data) : new Date();
+          return d.getMonth() === new Date().getMonth();
+        })
+        .map((m: any) => (
+          <View key={m.id} style={styles.mov}>
+            <Text style={{ fontWeight: "700" }}>{m.tipo}</Text>
+            <Text>R$ {Number(m.valor || 0).toFixed(2)}</Text>
+            <Text>{new Date(m.data).toLocaleString()}</Text>
           </View>
-        )}
-      />
-    </View>
+        ))}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 22, fontWeight: "700", marginBottom: 16 },
-  subTitle: { fontSize: 18, fontWeight: "700", marginTop: 16, marginBottom: 4 },
-  box: {
-    padding: 12,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    marginBottom: 10,
-  },
-  label: { fontSize: 16, color: "#555" },
-  valor: { fontSize: 20, fontWeight: "700" },
-  btn: {
-    backgroundColor: "#2B8AF6",
-    padding: 12,
-    borderRadius: 12,
-    marginTop: 10,
-  },
-  btnTxt: { textAlign: "center", fontWeight: "700", color: "#fff" },
-  movCard: {
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    marginBottom: 8,
-  },
-  movTipo: { fontWeight: "700", color: "#2B8AF6" },
-  movData: { color: "#888", fontSize: 12 },
+  container: { padding: 16, backgroundColor: "#fff", flex: 1 },
+  title: { fontSize: 22, fontWeight: "700", marginBottom: 12 },
+  box: { backgroundColor: "#eef6ff", padding: 12, borderRadius: 10, marginBottom: 12 },
+  label: { color: "#555" },
+  valor: { fontSize: 20, fontWeight: "700", color: "#2B8AF6" },
+  btn: { backgroundColor: "#2B8AF6", padding: 12, borderRadius: 10, marginBottom: 8 },
+  btnTxt: { color: "#fff", fontWeight: "700", textAlign: "center" },
+  mov: { padding: 8, borderWidth: 1, borderColor: "#eee", borderRadius: 8, marginTop: 8 },
 });

@@ -70,11 +70,12 @@ export default function LoginScreen({ navigation }: Props) {
             <Text style={styles.buttonText}>Entrar</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.registerText}>
-              Não tem conta? <Text style={styles.registerLink}>Cadastre-se</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("TermsAndPolitics")}>
+            <Text style={{ marginTop: 15, color: "#2B8AF6", textDecorationLine: 'underline' }}>
+                Termos de Uso
             </Text>
           </TouchableOpacity>
+
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

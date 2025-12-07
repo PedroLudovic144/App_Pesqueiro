@@ -1,103 +1,162 @@
-// PeixesDoLagoScreen.tsx
+// screens/PeixesDoLagoScreen.tsx
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  FlatList,
+  Alert,
+  StyleSheet,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import VendaPeixeModal from "./VendaPeixeModal";
 
 export default function PeixesDoLagoScreen({ route, navigation }: any) {
-  const { lagoId } = route.params;
+  const lagoId = route.params?.lagoId;
   const [lago, setLago] = useState<any>(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [peixeSelecionado, setPeixeSelecionado] = useState<any>(null);
 
   useEffect(() => {
     carregar();
-    navigation.addListener("focus", carregar);
+    const unsub = navigation.addListener("focus", carregar);
+    return unsub;
   }, []);
 
   async function carregar() {
     const raw = await AsyncStorage.getItem("lagos");
     const arr = raw ? JSON.parse(raw) : [];
-
-    const lagoAtual = arr.find((l: any) => l.id === lagoId);
-    setLago(lagoAtual);
+    const encontrado = arr.find((l: any) => l.id === lagoId);
+    setLago(encontrado);
   }
 
-  function abrirVenda(peixe: any) {
-    setPeixeSelecionado(peixe);
-    setModalVisible(true);
+  async function deletarPeixe(idPeixe: string) {
+    Alert.alert("Excluir peixe?", "Isso não pode ser desfeito.", [
+      { text: "Cancelar" },
+      {
+        text: "OK",
+        onPress: async () => {
+          const raw = await AsyncStorage.getItem("lagos");
+          let arr = raw ? JSON.parse(raw) : [];
+          const idx = arr.findIndex((l: any) => l.id === lagoId);
+          if (idx === -1) return;
+
+          arr[idx].peixes = (arr[idx].peixes || []).filter(
+            (p: any) => p.id !== idPeixe
+          );
+
+          await AsyncStorage.setItem("lagos", JSON.stringify(arr));
+          carregar();
+        },
+      },
+    ]);
   }
 
-  async function venderPeixe(idPeixe: string, qtd: number) {
+  async function removerMorte(idPeixe: string) {
     const raw = await AsyncStorage.getItem("lagos");
-    const arr = raw ? JSON.parse(raw) : [];
+    let arr = raw ? JSON.parse(raw) : [];
 
     const idx = arr.findIndex((l: any) => l.id === lagoId);
-    if (idx < 0) return;
+    if (idx === -1) return;
 
-    const peixeIdx = arr[idx].peixes.findIndex((p: any) => p.id === idPeixe);
-    if (peixeIdx < 0) return;
+    const pidx = arr[idx].peixes.findIndex((p: any) => p.id === idPeixe);
+    if (pidx === -1) return;
 
-    arr[idx].peixes[peixeIdx].quantidade -= qtd;
-
-    if (arr[idx].peixes[peixeIdx].quantidade <= 0) {
-      arr[idx].peixes.splice(peixeIdx, 1); // remove peixe
-    }
+    arr[idx].peixes[pidx].quantidadeKg = Math.max(
+      0,
+      arr[idx].peixes[pidx].quantidadeKg - 1
+    );
 
     await AsyncStorage.setItem("lagos", JSON.stringify(arr));
-
     carregar();
   }
 
+  function venderPeixe(peixe: any) {
+    navigation.navigate("VendaPeixeModal", { lagoId, peixe });
+  }
+
+  if (!lago)
+    return (
+      <View style={{ padding: 16 }}>
+        <Text>Carregando...</Text>
+      </View>
+    );
+
   return (
-    <View style={{ flex: 1, padding: 12 }}>
-      <Text style={styles.title}>Peixes do lago "{lago?.nome}"</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Peixes do Lago {lago.nome}</Text>
 
       <TouchableOpacity
         style={styles.addBtn}
         onPress={() => navigation.navigate("AdicionarPeixe", { lagoId })}
       >
-        <Text style={styles.addTxt}>➕ Adicionar Peixe</Text>
+        <Text style={styles.addTxt}>+ Adicionar Peixe</Text>
       </TouchableOpacity>
 
       <FlatList
-        data={lago?.peixes ?? []}
-        keyExtractor={(i: any) => i.id}
+        data={lago.peixes || []}
+        keyExtractor={(item: any) => item.id}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <Text style={styles.nome}>{item.nome}</Text>
-            <Text>{item.quantidade} unidades</Text>
-            <Text>R$ {item.valor}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.nome}>{item.nome}</Text>
+              <Text>Quantidade (KG): {item.quantidadeKg}</Text>
+              <Text>Preço COMPRA (R$/kg): {item.precoCompraKg}</Text>
+              <Text>Preço VENDA (R$/kg): {Number(item.precoVendaKg || 0).toFixed(2)}</Text>
+            </View>
 
-            <TouchableOpacity
-              style={styles.venderBtn}
-              onPress={() => abrirVenda(item)}
-            >
-              <Text style={styles.venderTxt}>Vender</Text>
-            </TouchableOpacity>
+            <View style={styles.actions}>
+              <TouchableOpacity
+                style={[styles.actionBtn, { backgroundColor: "#2B8AF6" }]}
+                onPress={() => venderPeixe(item)}
+              >
+                <Text style={styles.actionTxt}>Vender</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionBtn, { backgroundColor: "#FFA726" }]}
+                onPress={() => removerMorte(item.id)}
+              >
+                <Text style={styles.actionTxt}>-1 KG (morte)</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionBtn, { backgroundColor: "#E53935" }]}
+                onPress={() => deletarPeixe(item.id)}
+              >
+                <Text style={styles.actionTxt}>Excluir</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
-      />
-
-      <VendaPeixeModal
-        visible={modalVisible}
-        peixe={peixeSelecionado}
-        onClose={() => setModalVisible(false)}
-        onConfirm={(qtd: number) => {
-          venderPeixe(peixeSelecionado.id, qtd);
-          setModalVisible(false);
-        }}
+        ListEmptyComponent={() => (
+          <Text style={{ marginTop: 20, color: "#666" }}>
+            Nenhum peixe registrado.
+          </Text>
+        )}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: { padding: 16, flex: 1 },
   title: { fontSize: 22, fontWeight: "700", marginBottom: 12 },
-  card: { padding: 12, borderWidth: 1, borderColor: "#ddd", borderRadius: 10, marginBottom: 10 },
-  nome: { fontSize: 18, fontWeight: "700" },
-  addBtn: { backgroundColor: "#2B8AF6", padding: 12, borderRadius: 10, marginBottom: 12 },
+  addBtn: {
+    backgroundColor: "#2B8AF6",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 16,
+  },
   addTxt: { color: "#fff", textAlign: "center", fontWeight: "700" },
-  venderBtn: { backgroundColor: "#28a745", padding: 10, borderRadius: 8, marginTop: 10 },
-  venderTxt: { color: "#fff", textAlign: "center", fontWeight: "700" },
+  card: {
+    backgroundColor: "#fff",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#eee",
+    flexDirection: "row",
+  },
+  nome: { fontSize: 18, fontWeight: "700", marginBottom: 4 },
+  actions: { justifyContent: "space-between", alignItems: "flex-end" },
+  actionBtn: { padding: 8, borderRadius: 8, marginBottom: 6 },
+  actionTxt: { color: "#fff", fontWeight: "700" },
 });

@@ -1,14 +1,15 @@
-// ListaEquipamentosScreen.tsx
+// screens/ListaEquipamentosScreen.tsx
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Alert } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function ListaEquipamentosScreen({ navigation }: any) {
-  const [equipamentos, setEquipamentos] = useState([]);
+  const [equipamentos, setEquipamentos] = useState<any[]>([]);
 
   useEffect(() => {
     carregar();
-    navigation.addListener("focus", carregar);
+    const unsub = navigation.addListener("focus", carregar);
+    return unsub;
   }, []);
 
   async function carregar() {
@@ -16,96 +17,81 @@ export default function ListaEquipamentosScreen({ navigation }: any) {
     setEquipamentos(raw ? JSON.parse(raw) : []);
   }
 
-  async function excluir(id: string) {
-    const novo = equipamentos.filter((e: any) => e.id !== id);
-    await AsyncStorage.setItem("equipamentos", JSON.stringify(novo));
-    setEquipamentos(novo);
+  async function excluirEquipamento(id: string) {
+    Alert.alert("Excluir equipamento?", "Isso removerá o item permanentemente.", [
+      { text: "Cancelar" },
+      { text: "OK", onPress: async () => {
+        const raw = await AsyncStorage.getItem("equipamentos");
+        let arr = raw ? JSON.parse(raw) : [];
+        arr = arr.filter((e: any) => e.id !== id);
+        await AsyncStorage.setItem("equipamentos", JSON.stringify(arr));
+        carregar();
+      } }
+    ]);
   }
 
-  async function marcarAlugado(equip: any) {
-    const novo = equipamentos.map((e: any) =>
-      e.id === equip.id ? { ...e, alugado: !e.alugado } : e
-    );
-
-    await AsyncStorage.setItem("equipamentos", JSON.stringify(novo));
-    setEquipamentos(novo);
+  async function removerUmaUnidade(id: string) {
+    Alert.alert("Remover 1 unidade?", undefined, [
+      { text: "Cancelar" },
+      { text: "OK", onPress: async () => {
+        const raw = await AsyncStorage.getItem("equipamentos");
+        let arr = raw ? JSON.parse(raw) : [];
+        const idx = arr.findIndex((e: any) => e.id === id);
+        if (idx === -1) return;
+        arr[idx].quantidade = Math.max(0, (Number(arr[idx].quantidade) || 0) - 1);
+        await AsyncStorage.setItem("equipamentos", JSON.stringify(arr));
+        carregar();
+      } }
+    ]);
   }
 
   return (
-    <View style={{ flex: 1, padding: 16 }}>
-      <TouchableOpacity
-        style={styles.addBtn}
-        onPress={() => navigation.navigate("AdicionarEquipamento")}
-      >
-        <Text style={styles.addTxt}>➕ Adicionar Equipamento</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Equipamentos</Text>
+
+      <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate("AdicionarEquipamento")}>
+        <Text style={styles.addTxt}>+ Adicionar Equipamento</Text>
       </TouchableOpacity>
 
       <FlatList
         data={equipamentos}
-        keyExtractor={(i: any) => i.id}
-        renderItem={({ item }: any) => (
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
           <View style={styles.card}>
-            <Text style={styles.nome}>{item.nome}</Text>
-            <Text>Preço aluguel: R$ {item.valor}</Text>
-            <Text>Status: {item.alugado ? "🟥 Alugado" : "🟩 Disponível"}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.nome}>{item.nome}</Text>
+              <Text>Qtd: {item.quantidade}</Text>
+              <Text>Aluguel: R$ {Number(item.precoAluguel || 0).toFixed(2)}</Text>
+            </View>
 
-            <TouchableOpacity
-              style={styles.btn}
-              onPress={() => marcarAlugado(item)}
-            >
-              <Text style={styles.btnTxt}>
-                {item.alugado ? "Marcar como devolvido" : "Marcar como alugado"}
-              </Text>
-            </TouchableOpacity>
+            <View style={{ alignItems: "flex-end" }}>
+              <TouchableOpacity style={[styles.btn, { backgroundColor: item.quantidade > 0 ? "#2B8AF6" : "#999" }]} disabled={item.quantidade === 0} onPress={() => navigation.navigate("Aluguel", { equipamentoId: item.id })}>
+                <Text style={styles.btnTxtSmall}>{item.quantidade === 0 ? "Indisponível" : "Aluguéis"}</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.delBtn}
-              onPress={() =>
-                Alert.alert("Excluir", "Deseja excluir?", [
-                  { text: "Cancelar" },
-                  { text: "Excluir", onPress: () => excluir(item.id) },
-                ])
-              }
-            >
-              <Text style={styles.delTxt}>Excluir</Text>
-            </TouchableOpacity>
+              <TouchableOpacity style={[styles.btn, { marginTop: 8 }]} onPress={() => removerUmaUnidade(item.id)}>
+                <Text style={styles.btnTxtSmall}>-1</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={[styles.btn, { marginTop: 8, backgroundColor: "#E53935" }]} onPress={() => excluirEquipamento(item.id)}>
+                <Text style={styles.btnTxtSmall}>Excluir</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
+        ListEmptyComponent={() => <Text style={{ color: "#666" }}>Nenhum equipamento cadastrado.</Text>}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  addBtn: {
-    backgroundColor: "#2B8AF6",
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 14,
-  },
-  addTxt: { textAlign: "center", color: "#fff", fontWeight: "700" },
-
-  card: {
-    backgroundColor: "#f5f5f5",
-    padding: 14,
-    borderRadius: 10,
-    marginBottom: 12,
-  },
+  container: { padding: 16, flex: 1 },
+  title: { fontSize: 22, fontWeight: "700", marginBottom: 12 },
+  addBtn: { backgroundColor: "#2B8AF6", padding: 12, borderRadius: 10, marginBottom: 12 },
+  addTxt: { color: "#fff", fontWeight: "700", textAlign: "center" },
+  card: { backgroundColor: "#fff", padding: 12, borderRadius: 10, borderWidth: 1, borderColor: "#eee", marginBottom: 10, flexDirection: "row" },
   nome: { fontSize: 18, fontWeight: "700" },
-
-  btn: {
-    backgroundColor: "#28a745",
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 10,
-  },
-  btnTxt: { color: "#fff", textAlign: "center", fontWeight: "700" },
-
-  delBtn: {
-    backgroundColor: "#c0392b",
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 8,
-  },
-  delTxt: { color: "#fff", textAlign: "center", fontWeight: "700" },
+  btn: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, backgroundColor: "#2B8AF6" },
+  btnTxtSmall: { color: "#fff", fontWeight: "700" },
 });

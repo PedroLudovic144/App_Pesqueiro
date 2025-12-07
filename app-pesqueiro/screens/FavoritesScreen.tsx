@@ -1,40 +1,58 @@
-// FavoritesScreen.tsx
+// /screens/FavoritesScreen.tsx
 import React, { useEffect, useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { View, FlatList, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function FavoritesScreen({ navigation, route }: any) {
-  const user = route?.params?.user ?? { id: "guest" };
-  const [list, setList] = useState<any[]>([]);
+export default function FavoritesScreen({ navigation }: any) {
+  const [favoritos, setFavoritos] = useState<string[]>([]);
+  const [lista, setLista] = useState<any[]>([]);
 
-  useEffect(()=>{ carregar(); const unsub = navigation.addListener('focus', carregar); return unsub; }, []);
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", carregar);
+    carregar();
+    return unsubscribe;
+  }, []);
 
   async function carregar() {
-    const rawFav = await AsyncStorage.getItem(`favoritos_${user.id}`);
+    const rawFav = await AsyncStorage.getItem("favoritos");
     const favArr = rawFav ? JSON.parse(rawFav) : [];
-    const rawP = await AsyncStorage.getItem("pesqueiros");
-    const pesq = rawP ? JSON.parse(rawP) : [];
-    setList(pesq.filter((p:any)=> favArr.includes(p.id)));
+    setFavoritos(favArr);
+
+    // base igual ao Explorer
+    const base = [
+      { id: "1", nome: "Pesqueiro Cantareira", cidade: "São Paulo", foto: require("../assets/images/pesqueirocantareira.png") },
+      { id: "2", nome: "Pesqueiro do Arnaldo", cidade: "Mairiporã", foto: require("../assets/images/pesqueiroarnaldao.png") },
+      { id: "3", nome: "Pesqueiro Paraíso", cidade: "Atibaia", foto: require("../assets/images/pesqueiroparaiso.jpg") },
+    ];
+
+    setLista(base.filter((p) => favArr.includes(p.id)));
   }
 
   return (
-    <SafeAreaView style={{flex:1}}>
-      <View style={{padding:12}}>
-        <Text style={{fontSize:18,fontWeight:"700"}}>Favoritos</Text>
-        <FlatList data={list} keyExtractor={i=>i.id} renderItem={({item})=>(
-          <View style={styles.card}>
-            <Text style={{fontWeight:"700"}}>{item.nome}</Text>
-            <TouchableOpacity onPress={() => navigation.navigate("ClienteApp", { screen: "DetailsFisher", params: { pesqueiro: item } })}>
-              <Text style={{marginTop:6}}>Ver</Text>
-            </TouchableOpacity>
-          </View>
-        )} />
-      </View>
-    </SafeAreaView>
+    <View style={{ flex: 1, padding: 16 }}>
+      <Text style={styles.title}>Favoritos</Text>
+
+      <FlatList
+        data={lista}
+        keyExtractor={(i) => i.id}
+        renderItem={({ item }) => (
+          <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("DetailsFisher", { pesqueiro: item })}>
+            <Image source={item.foto} style={styles.img} />
+            <View style={{ marginLeft: 12 }}>
+              <Text style={styles.name}>{item.nome}</Text>
+              <Text style={{ color: "#666" }}>{item.cidade}</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+        ListEmptyComponent={() => <Text style={{ color: "#666" }}>Nenhum favorito.</Text>}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card:{padding:12,borderWidth:1,borderColor:"#eee",borderRadius:8, marginBottom:8}
+  title: { fontSize: 20, fontWeight: "700", marginBottom: 12 },
+  card: { flexDirection: "row", backgroundColor: "#fff", padding: 10, borderRadius: 10, marginBottom: 12, alignItems: "center" },
+  img: { width: 90, height: 70, borderRadius: 8 },
+  name: { fontSize: 16, fontWeight: "700" },
 });
