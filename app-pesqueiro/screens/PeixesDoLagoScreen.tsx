@@ -114,7 +114,7 @@ export default function PeixesDoLagoScreen({ route, navigation }: any) {
                 style={[styles.actionBtn, { backgroundColor: "#FFA726" }]}
                 onPress={() => removerMorte(item.id)}
               >
-                <Text style={styles.actionTxt}>-1 KG (morte)</Text>
+                <Text style={styles.actionTxt}>-1 KG</Text>
               </TouchableOpacity>
 
               <TouchableOpacity

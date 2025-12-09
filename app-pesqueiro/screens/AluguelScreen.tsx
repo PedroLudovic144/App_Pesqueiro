@@ -1,10 +1,19 @@
 // screens/AluguelScreen.tsx
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, FlatList, Button } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  FlatList,
+  Button
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function AluguelScreen({ route, navigation }: any) {
-  const equipamentoId = route?.params?.equipamentoId;
+  const equipamentoId = String(route?.params?.equipamentoId || "");
   const [equipamento, setEquipamento] = useState<any>(null);
   const [funcionario, setFuncionario] = useState("");
   const [cliente, setCliente] = useState("");
@@ -17,45 +26,78 @@ export default function AluguelScreen({ route, navigation }: any) {
   }, []);
 
   async function carregar() {
+    console.log("ID recebido:", equipamentoId);
+
+    if (!equipamentoId) {
+      setEquipamento(null);
+      return;
+    }
+
     const rawE = await AsyncStorage.getItem("equipamentos");
     const arrE = rawE ? JSON.parse(rawE) : [];
-    setEquipamento(arrE.find((e: any) => e.id === equipamentoId) ?? null);
+    
+    const encontrado = arrE.find((e: any) => String(e.id) === String(equipamentoId));
+    setEquipamento(encontrado ?? null);
 
     const rawA = await AsyncStorage.getItem("alugueis");
     const arrA = rawA ? JSON.parse(rawA) : [];
-    setAluguels(arrA.filter((a: any) => a.equipamentoId === equipamentoId));
+    setAluguels(arrA.filter((a: any) => String(a.equipamentoId) === String(equipamentoId)));
   }
 
   async function confirmarAluguel() {
-    if (!funcionario.trim()) { Alert.alert("Erro", "Informe o funcionário"); return; }
-    if (!cliente.trim()) { Alert.alert("Erro", "Informe o cliente"); return; }
-    if (!equipamento) { Alert.alert("Erro", "Equipamento não encontrado"); return; }
-    if ((Number(equipamento.quantidade) || 0) <= 0) { Alert.alert("Indisponível", "Quantidade insuficiente"); return; }
+    if (!funcionario.trim()) return Alert.alert("Erro", "Informe o funcionário");
+    if (!cliente.trim()) return Alert.alert("Erro", "Informe o cliente");
+    if (!equipamento) return Alert.alert("Erro", "Equipamento não encontrado");
+
+    if ((Number(equipamento.quantidade) || 0) <= 0)
+      return Alert.alert("Indisponível", "Quantidade insuficiente");
 
     try {
       const rawE = await AsyncStorage.getItem("equipamentos");
       let arrE = rawE ? JSON.parse(rawE) : [];
-      const idx = arrE.findIndex((e: any) => e.id === equipamentoId);
+      const idx = arrE.findIndex((e: any) => String(e.id) === String(equipamentoId));
+
       if (idx >= 0) {
-        arrE[idx].quantidade = Math.max(0, (Number(arrE[idx].quantidade) || 0) - 1);
+        arrE[idx].quantidade = Math.max(0, Number(arrE[idx].quantidade) - 1);
         await AsyncStorage.setItem("equipamentos", JSON.stringify(arrE));
       }
 
       const rawA = await AsyncStorage.getItem("alugueis");
       let arrA = rawA ? JSON.parse(rawA) : [];
-      const novo = { id: Date.now().toString(), equipamentoId, equipamentoNome: equipamento.nome, funcionario: funcionario.trim(), cliente: cliente.trim(), inicio: new Date().toISOString(), devolucao: null, valor: Number(equipamento.precoAluguel || 0) };
+
+      const novo = {
+        id: Date.now().toString(),
+        equipamentoId,
+        equipamentoNome: equipamento.nome,
+        funcionario: funcionario.trim(),
+        cliente: cliente.trim(),
+        inicio: new Date().toISOString(),
+        devolucao: null,
+        valor: Number(equipamento.precoAluguel || 0)
+      };
+
       arrA.push(novo);
       await AsyncStorage.setItem("alugueis", JSON.stringify(arrA));
 
       const rawMov = await AsyncStorage.getItem("movimentacoes");
       const movs = rawMov ? JSON.parse(rawMov) : [];
-      movs.push({ id: Date.now().toString() + "_a", tipo: "aluguel_equipamento", valor: Number(equipamento.precoAluguel || 0), referenciaId: novo.id, descricao: `Aluguel ${equipamento.nome} por ${novo.cliente}`, data: new Date().toISOString() });
+
+      movs.push({
+        id: Date.now().toString() + "_a",
+        tipo: "aluguel_equipamento",
+        valor: Number(equipamento.precoAluguel || 0),
+        referenciaId: novo.id,
+        descricao: `Aluguel ${equipamento.nome} por ${novo.cliente}`,
+        data: new Date().toISOString(),
+      });
+
       await AsyncStorage.setItem("movimentacoes", JSON.stringify(movs));
 
       Alert.alert("Sucesso", "Aluguel registrado.");
       setFuncionario("");
       setCliente("");
       carregar();
+
     } catch (err) {
       console.log("Erro confirmar aluguel:", err);
       Alert.alert("Erro", "Não foi possível registrar o aluguel.");
@@ -63,43 +105,54 @@ export default function AluguelScreen({ route, navigation }: any) {
   }
 
   async function deletarAluguel(id: string) {
-  Alert.alert("Excluir aluguel?", "O equipamento voltará ao estoque.", [
-    { text: "Cancelar" },
-    { text: "OK", onPress: async () => {
-      const rawA = await AsyncStorage.getItem("alugueis");
-      let arrA = rawA ? JSON.parse(rawA) : [];
+    Alert.alert("Excluir aluguel?", "O equipamento voltará ao estoque.", [
+      { text: "Cancelar" },
+      {
+        text: "OK",
+        onPress: async () => {
+          const rawA = await AsyncStorage.getItem("alugueis");
+          let arrA = rawA ? JSON.parse(rawA) : [];
 
-      const aluguel = arrA.find((a: any) => a.id === id);
-      if (!aluguel) return;
+          const aluguel = arrA.find((a: any) => a.id === id);
+          if (!aluguel) return;
 
-      // 1️⃣ Atualiza a devolução
-      aluguel.devolucao = new Date().toISOString();
+          aluguel.devolucao = new Date().toISOString();
+          await AsyncStorage.setItem("alugueis", JSON.stringify(arrA));
 
-      // Salva lista com o aluguel atualizado
-      await AsyncStorage.setItem("alugueis", JSON.stringify(arrA));
+          const rawE = await AsyncStorage.getItem("equipamentos");
+          let arrE = rawE ? JSON.parse(rawE) : [];
+          const idx = arrE.findIndex((e: any) => String(e.id) === String(aluguel.equipamentoId));
 
-      // 2️⃣ Devolve 1 unidade ao estoque
-      const rawE = await AsyncStorage.getItem("equipamentos");
-      let arrE = rawE ? JSON.parse(rawE) : [];
-      const idx = arrE.findIndex((e: any) => e.id === aluguel.equipamentoId);
-      if (idx >= 0) {
-        arrE[idx].quantidade = (Number(arrE[idx].quantidade) || 0) + 1;
-        await AsyncStorage.setItem("equipamentos", JSON.stringify(arrE));
+          if (idx >= 0) {
+            arrE[idx].quantidade = (Number(arrE[idx].quantidade) || 0) + 1;
+            await AsyncStorage.setItem("equipamentos", JSON.stringify(arrE));
+          }
+
+          const rawMov = await AsyncStorage.getItem("movimentacoes");
+          let movs = rawMov ? JSON.parse(rawMov) : [];
+          movs = movs.filter((m: any) => m.referenciaId !== id);
+          await AsyncStorage.setItem("movimentacoes", JSON.stringify(movs));
+
+          carregar();
+        }
       }
+    ]);
+  }
 
-      // 3️⃣ Remove movimentação vinculada
-      const rawMov = await AsyncStorage.getItem("movimentacoes");
-      let movs = rawMov ? JSON.parse(rawMov) : [];
-      movs = movs.filter((m: any) => m.referenciaId !== id);
-      await AsyncStorage.setItem("movimentacoes", JSON.stringify(movs));
+  // ⚠️ Se o ID não chegou, mostra aviso claro
+  if (!equipamentoId)
+    return (
+      <View style={{ padding: 16 }}>
+        <Text style={{ color: "red" }}>Erro: ID do equipamento não foi enviado.</Text>
+      </View>
+    );
 
-      carregar();
-    } }
-  ]);
-}
-
-
-  if (!equipamento) return <View style={{ padding: 16 }}><Text>Carregando equipamento...</Text></View>;
+  if (!equipamento)
+    return (
+      <View style={{ padding: 16 }}>
+        <Text>Carregando equipamento...</Text>
+      </View>
+    );
 
   return (
     <View style={styles.container}>
@@ -111,9 +164,12 @@ export default function AluguelScreen({ route, navigation }: any) {
       <Text style={styles.label}>Nome do cliente</Text>
       <TextInput style={styles.input} value={cliente} onChangeText={setCliente} />
 
-      <TouchableOpacity style={styles.btn} onPress={confirmarAluguel}><Text style={styles.btnTxt}>Confirmar Aluguel</Text></TouchableOpacity>
+      <TouchableOpacity style={styles.btn} onPress={confirmarAluguel}>
+        <Text style={styles.btnTxt}>Confirmar Aluguel</Text>
+      </TouchableOpacity>
 
       <Text style={{ marginTop: 16, fontWeight: "700" }}>Histórico de aluguéis</Text>
+
       <FlatList
         data={aluguels}
         keyExtractor={(i: any) => i.id}
@@ -135,8 +191,27 @@ const styles = StyleSheet.create({
   container: { padding: 16, flex: 1 },
   title: { fontSize: 20, fontWeight: "700", marginBottom: 12 },
   label: { marginTop: 8 },
-  input: { backgroundColor: "#fff", borderWidth: 1, borderColor: "#ddd", padding: 10, borderRadius: 8, marginTop: 6 },
-  btn: { backgroundColor: "#2B8AF6", padding: 12, borderRadius: 10, marginTop: 12, alignItems: "center" },
+  input: {
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 6
+  },
+  btn: {
+    backgroundColor: "#2B8AF6",
+    padding: 12,
+    borderRadius: 10,
+    marginTop: 12,
+    alignItems: "center"
+  },
   btnTxt: { color: "#fff", fontWeight: "700" },
-  card: { padding: 10, borderWidth: 1, borderColor: "#eee", borderRadius: 8, marginTop: 8 },
+  card: {
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#eee",
+    borderRadius: 8,
+    marginTop: 8
+  }
 });

@@ -51,7 +51,7 @@ export default function AdicionarPeixeScreen({ route, navigation }: any) {
 
       <TextInput
         style={styles.input}
-        placeholder="Nome"
+        placeholder="Espécie"
         value={nome}
         onChangeText={setNome}
       />
